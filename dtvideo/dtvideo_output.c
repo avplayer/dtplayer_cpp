@@ -30,7 +30,7 @@ void vout_register_all ()
 {
     /*Register all audio_output */
     //REGISTER_VO(NULL, null);
-    REGISTER_VO (SDL, sdl);
+// #REGISTER_VO (SDL, sdl);
     REGISTER_VO (SDL2, sdl2);
     return;
 }
