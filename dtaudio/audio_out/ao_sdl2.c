@@ -1,4 +1,3 @@
-#ifdef ENABLE_AO_SDL2
 
 #include "dtaudio_output.h"
 #include "dt_buffer.h"
@@ -137,4 +136,3 @@ ao_wrapper_t ao_sdl2_ops = {
     .ao_level = ao_sdl2_level,
     .ao_latency = ao_sdl2_get_latency,
 };
-#endif /* ENABLE_AO_ALSA */

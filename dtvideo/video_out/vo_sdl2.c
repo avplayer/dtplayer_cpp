@@ -1,4 +1,3 @@
-#ifdef ENABLE_VO_SDL2
 
 #include "../dtvideo_output.h"
 #include <SDL2/SDL.h>
@@ -149,5 +148,3 @@ vo_operations_t vo_sdl2_ops = {
     .vo_stop = vo_sdl2_stop,
     .vo_render = vo_sdl2_render,
 };
-
-#endif /* ENABLE_VO_SDL2 */

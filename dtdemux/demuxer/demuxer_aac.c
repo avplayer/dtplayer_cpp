@@ -1,4 +1,3 @@
-#if ENABLE_DEMUXER_AAC
 
 #include "dtdemuxer.h"
 
@@ -412,5 +411,3 @@ demuxer_wrapper_t demuxer_aac = {
     .seek_frame = demuxer_aac_seek_frame,
     .close = demuxer_aac_close
 };
-
-#endif

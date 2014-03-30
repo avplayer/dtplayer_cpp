@@ -5,11 +5,24 @@ include_directories(../dtaudio)
 include_directories(../dtvideo)
 include_directories(../dtport)
 
-add_definitions(-DENABLE_DEMUXER_FFMPEG -DENABLE_DEMUXER_AAC)
-
 aux_source_directory( . LIBDEMUXSOURCES)
 
-add_library(dtdemux STATIC ${LIBDEMUXSOURCES} demuxer/demuxer_aac.c demuxer/demuxer_ffmpeg.c)
+if(FFMPEG_FOUND)
+add_definitions(-DENABLE_DEMUXER_FFMPEG)
+list(APPEND LIBDEMUXSOURCES  demuxer/demuxer_ffmpeg.c)
+endif()
 
+if(FAAC_FOUND)
+add_definitions(-DENABLE_DEMUXER_AAC)
+list(APPEND LIBDEMUXSOURCES demuxer/demuxer_aac.c)
+endif()
+
+add_library(dtdemux STATIC ${LIBDEMUXSOURCES} )
+
+if(FFMPEG_FOUND)
 target_link_libraries(dtdemux ${FFMPEG_LIBRARIES})
+endif()
 
+if(FAAC_FOUND)
+target_link_libraries(dtdemux ${FAAC_LIBRARY})
+endif()

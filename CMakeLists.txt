@@ -10,9 +10,10 @@ set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_STATIC_RUNTIME    ON)
 
-find_package( ffmpeg REQUIRED)
+find_package( ffmpeg )
 find_package( SDL2  REQUIRED)
 find_package( faad )
+find_package( faac )
 find_package( Threads )
 
 add_definitions(-D__STDC_CONSTANT_MACROS)
