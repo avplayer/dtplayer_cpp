@@ -12,16 +12,17 @@ dtplayer is based on C , aimed to provide multimedia playing service base on ffm
 
 At present, dtplayer have provided examples on stream-demuxer-decoder-render modules. User can easily understand how to add new element.
 
-User can also remove ffmpeg dependence through modifing config.mk (set DT_FFMPEG = no), Then you will get a aac player for now.
+if cmake does not detect a ffmpeg install but detect a faac install,
+then you will get a aac player.
 
 Compile
 ========
 
-1 install sdl1.0 or sdl2.0
+1 install sdl2.0
 
-2 install ffmpeg & EXPORT DT_FFMPEG_DIR = FFMPEG_INSTALL_PATH
+2 install ffmpeg-devel (libav-dev in deb)
 
-3 make
+3 mkdir -pv build && cd build && cmake .. && make
 
 Test
 ========
