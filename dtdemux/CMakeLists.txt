@@ -12,10 +12,8 @@ add_definitions(-DENABLE_DEMUXER_FFMPEG)
 list(APPEND LIBDEMUXSOURCES  demuxer/demuxer_ffmpeg.c)
 endif()
 
-if(FAAC_FOUND)
 add_definitions(-DENABLE_DEMUXER_AAC)
 list(APPEND LIBDEMUXSOURCES demuxer/demuxer_aac.c)
-endif()
 
 add_library(dtdemux STATIC ${LIBDEMUXSOURCES} )
 
