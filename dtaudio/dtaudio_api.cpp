@@ -106,7 +106,8 @@ int dtaudio_stop (void *audio_priv)
     event->type = AUDIO_EVENT_STOP;
     dt_send_event (event);
 
-    ret = pthread_join (actx->event_loop_id, NULL);
+    actx->event_loop_thread.join();
+
     audio_server_release (actx);
     free (audio_priv);
     audio_priv = NULL;
@@ -127,7 +128,8 @@ int dtaudio_release (void *audio_priv)
     event->type = AUDIO_EVENT_RELEASE;
     dt_send_event (event);
 
-    ret = pthread_join (actx->event_loop_id, NULL);
+    actx->event_loop_thread.join();
+
     audio_server_release (actx);
     free (audio_priv);
     audio_priv = NULL;

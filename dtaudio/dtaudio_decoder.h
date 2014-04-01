@@ -4,6 +4,7 @@
 #include "dt_buffer.h"
 #include "dt_av.h"
 #include "dtaudio_api.h"
+#include <functional>
 
 typedef enum
 {
@@ -31,15 +32,24 @@ typedef struct{
 
 typedef struct dec_audio_wrapper
 {
+
     const char *name;
     audio_format_t afmt;        //not used, for ffmpeg
     int type;
-    int (*init) (struct dec_audio_wrapper * wrapper,void *parent);
-    int (*decode_frame) (struct dec_audio_wrapper * wrapper, adec_ctrl_t *pinfo);
-    int (*release) (struct dec_audio_wrapper * wrapper);
+    
+    std::function<int (struct dec_audio_wrapper * wrapper,void *parent)> init;
+    std::function<int (struct dec_audio_wrapper * wrapper, adec_ctrl_t *pinfo)> decode_frame;
+    std::function<int (struct dec_audio_wrapper * wrapper)> release;
     
     void *adec_priv;
     void *parent;
+
+    template<typename INIT, typename DECODE, typename RELEASE>
+    dec_audio_wrapper(int _type, const char * _name, audio_format_t _afmt,
+		INIT _init, DECODE _decode, RELEASE _release)
+		  : name(_name), type(_type), afmt(_afmt), init(_init), decode_frame(_decode), release(_release)
+	{
+	}
 } dec_audio_wrapper_t;
 
 struct dtaudio_decoder

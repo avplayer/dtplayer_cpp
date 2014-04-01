@@ -1,6 +1,8 @@
 #ifndef DT_AUDIO_H
 #define DT_AUDIO_H
 
+#include <thread>
+
 #include "dt_av.h"
 #include "dt_utils.h"
 #include "dt_event.h"
@@ -10,7 +12,6 @@
 #include "dtaudio_filter.h"
 #include "dtaudio_output.h"
 
-#include <pthread.h>
 #include <unistd.h>
 
 #define DTAUDIO_LOG_TAG "dtaudio"
@@ -52,7 +53,7 @@ typedef struct
     dtaudio_output_t audio_out;
     //dtaudio_pts_t    audio_pts;
     /*other */
-    pthread_t event_loop_id;
+    std::thread event_loop_thread;
     dtaudio_status_t audio_state;
     void *audio_server;
     void *dtport_priv;          //data source

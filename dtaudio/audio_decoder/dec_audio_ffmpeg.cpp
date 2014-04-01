@@ -205,11 +205,5 @@ int ffmpeg_adec_release (dec_audio_wrapper_t *wrapper)
     return 0;
 }
 
-dec_audio_wrapper_t adec_ffmpeg_ops = {
-    .name = "ffmpeg audio decoder",
-    .afmt = AUDIO_FORMAT_UNKOWN, //support all afmt
-    .type = DT_TYPE_AUDIO,
-    .init = ffmpeg_adec_init,
-    .decode_frame = ffmpeg_adec_decode,
-    .release = ffmpeg_adec_release,
-};
+dec_audio_wrapper_t adec_ffmpeg_ops(DT_TYPE_AUDIO, "ffmpeg audio decoder",
+	AUDIO_FORMAT_UNKOWN, ffmpeg_adec_init, ffmpeg_adec_decode, ffmpeg_adec_release);

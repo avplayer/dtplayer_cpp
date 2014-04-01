@@ -143,11 +143,4 @@ int ffmpeg_vdec_release (dtvideo_decoder_t * decoder)
     return 0;
 }
 
-dec_video_wrapper_t vdec_ffmpeg_ops = {
-    .name = "ffmpeg video decoder",
-    .vfmt = VIDEO_FORMAT_UNKOWN, //support all vfmt
-    .type = DT_TYPE_VIDEO,
-    .init = ffmpeg_vdec_init,
-    .decode_frame = ffmpeg_vdec_decode,
-    .release = ffmpeg_vdec_release,
-};
+dec_video_wrapper_t vdec_ffmpeg_ops(DT_TYPE_VIDEO, "ffmpeg video decoder", VIDEO_FORMAT_UNKOWN, ffmpeg_vdec_init, ffmpeg_vdec_decode, ffmpeg_vdec_release);

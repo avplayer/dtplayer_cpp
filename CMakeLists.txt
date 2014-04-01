@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 2.8)
 project(dtplayer)
 
+include(CheckCXXCompilerFlag)
+
+CHECK_CXX_COMPILER_FLAG(-std=c++0x LIBCXX_HAS_STDCXX0X_FLAG)
+
+if(LIBCXX_HAS_STDCXX0X_FLAG)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+endif()
+
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}")
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)

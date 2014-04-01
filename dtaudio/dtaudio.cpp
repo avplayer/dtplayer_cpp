@@ -283,7 +283,6 @@ static void *event_handle_loop (void *args)
 int audio_init (dtaudio_context_t * actx)
 {
     int ret = 0;
-    pthread_t tid;
     dt_info (DTAUDIO_LOG_TAG, "[%s:%d] audio init start\n", __FUNCTION__, __LINE__);
 
     actx->audio_state = AUDIO_STATUS_INITING;
@@ -313,15 +312,8 @@ int audio_init (dtaudio_context_t * actx)
     ret = audio_output_init (audio_out, actx->audio_param.audio_output);
     if (ret < 0)
         goto err3;
-    /*create event handle thread */
-    ret = pthread_create (&tid, NULL,  event_handle_loop, (void *) actx);
-    if (ret != 0)
-    {
-        dt_info (DTAUDIO_LOG_TAG, "create dtaudio thread failed\n");
-        goto err3;
-    }
-    dt_info (DTAUDIO_LOG_TAG, "[%s:%d] audio init ok \n", __FUNCTION__, __LINE__);
-    actx->event_loop_id = tid;
+
+    actx->event_loop_thread = std::thread(event_handle_loop, actx);
     actx->audio_state = AUDIO_STATUS_INITED;
 
     return 0;

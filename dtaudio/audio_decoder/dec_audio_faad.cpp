@@ -180,11 +180,4 @@ static int faad_release (dec_audio_wrapper_t * wrapper)
     return 0;
 }
 
-dec_audio_wrapper_t adec_faad_ops = {
-    .name = "faad audio decoder",
-    .afmt = AUDIO_FORMAT_AAC,
-    .type = DT_TYPE_AUDIO,
-    .init = faad_init,
-    .decode_frame = faad_decode,
-    .release = faad_release,
-};
+dec_audio_wrapper_t adec_faad_ops(DT_TYPE_AUDIO, "faad audio decoder", AUDIO_FORMAT_AAC, faad_init, faad_decode, faad_release);
