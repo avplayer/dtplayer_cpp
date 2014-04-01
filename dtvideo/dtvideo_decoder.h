@@ -23,7 +23,6 @@ typedef struct video_decoder_operation
     const char *name;
     video_format_t vfmt;        // not used, for ffmpeg
     int type;
-    struct video_decoder_operation *next;
 } dec_video_wrapper_t;
 
 struct dtvideo_decoder

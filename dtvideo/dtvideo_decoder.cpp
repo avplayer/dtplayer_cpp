@@ -1,3 +1,4 @@
+#include <vector>
 #include "dtvideo.h"
 #include "dtvideo_decoder.h"
 
@@ -8,19 +9,15 @@
 #define REGISTER_VDEC(X,x)	 	\
 	{							\
 		extern dec_video_wrapper_t vdec_##x##_ops; 	\
-		register_vdec(&vdec_##x##_ops); 	\
+		register_vdec(vdec_##x##_ops); 	\
 	}
-static dec_video_wrapper_t *first_vdec = NULL;
 
-static void register_vdec (dec_video_wrapper_t * vdec)
+static std::vector<dec_video_wrapper_t> dec_video_wrappers;
+
+static void register_vdec (dec_video_wrapper_t &vdec)
 {
-    dec_video_wrapper_t **p;
-    p = &first_vdec;
-    while (*p != NULL)
-        p = &(*p)->next;
-    *p = vdec;
-    dt_info (TAG, "[%s:%d] register vdec, name:%s fmt:%d \n", __FUNCTION__, __LINE__, (*p)->name, (*p)->vfmt);
-    vdec->next = NULL;
+	dec_video_wrappers.push_back(vdec);
+    dt_info (TAG, "[%s:%d] register vdec, name:%s fmt:%d \n", __FUNCTION__, __LINE__, vdec.name, vdec.vfmt);
 }
 
 void vdec_register_all ()
@@ -34,15 +31,13 @@ void vdec_register_all ()
 
 static int select_video_decoder (dtvideo_decoder_t * decoder)
 {
-    dec_video_wrapper_t **p;
-    p = &first_vdec;
-    if (!*p)
+    if (dec_video_wrappers.empty())
     {
         dt_error (TAG, "[%s:%d] select no video decoder \n", __FUNCTION__, __LINE__);
         return -1;
     }
-    decoder->dec_wrapper = *p;
-    dt_info (TAG, "[%s:%d] select--%s video decoder \n", __FUNCTION__, __LINE__, (*p)->name);
+    decoder->dec_wrapper = & dec_video_wrappers[0];
+    dt_info (TAG, "[%s:%d] select--%s video decoder \n", __FUNCTION__, __LINE__, decoder->dec_wrapper->name);
     return 0;
 }
 
