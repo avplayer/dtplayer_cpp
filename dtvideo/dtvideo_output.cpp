@@ -51,7 +51,7 @@ int select_vo_device (dtvideo_output_t * vo, int id)
     std::vector< vo_operations_t >::iterator it = vo_operations.begin();
 
     //  TODO: 这部分稍后使用 c++11 的 std::find_if 和 lambda 实现
-    while (it !=  vo_operations.end())
+	for (std::vector< vo_operations_t >::iterator it = vo_operations.begin(); it != vo_operations.end(); it++)
 	{
 		if (it->id ==  id)
 		{
