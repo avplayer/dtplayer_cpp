@@ -11,7 +11,7 @@
 #include "dt_rw.h"
 
 
-static char *version_tags = "";
+static const char *version_tags = "";
 
 void version_info (void)
 {

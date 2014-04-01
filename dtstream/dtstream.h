@@ -24,7 +24,7 @@ typedef struct{
 
 typedef struct stream_wrapper
 {
-    char *name;
+    const char *name;
     int id;
     int (*open) (struct stream_wrapper * wrapper,char *stream_name);
     int64_t (*tell) (struct stream_wrapper * wrapper);

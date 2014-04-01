@@ -15,7 +15,7 @@
 typedef struct ao_wrapper
 {
     int id;
-    char *name;
+    const char *name;
 
     int (*ao_init) (struct ao_wrapper * wrapper, void *parent);
     int (*ao_start) (struct ao_wrapper *wrapper);

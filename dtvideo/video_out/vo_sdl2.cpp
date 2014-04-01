@@ -30,8 +30,8 @@ static int sdl2_pre_init (dtvideo_output_t * vo)
     int flags;
     sdl2_ctx_t *ctx = (sdl2_ctx_t *)vo->vout_ops->handle;
     
-    putenv ("SDL_VIDEO_WINDOW_POS=center");
-    putenv ("SDL_VIDEO_CENTERED=1");
+    SDL_setenv("SDL_VIDEO_WINDOW_POS", "center", 1);
+    SDL_setenv ("SDL_VIDEO_CENTERED", "1", 1);
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         SDL_Init(SDL_INIT_VIDEO);
    

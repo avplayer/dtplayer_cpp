@@ -13,7 +13,7 @@ typedef struct dtvideo_output dtvideo_output_t;
 typedef struct _vo_t
 {
     int id;
-    char *name;
+    const char *name;
 
     int (*vo_init) (dtvideo_output_t * ao);
     int (*vo_stop) (dtvideo_output_t * ao);

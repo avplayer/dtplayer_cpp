@@ -20,7 +20,7 @@ typedef struct video_decoder_operation
     int (*init) (dtvideo_decoder_t * decoder);
     int (*decode_frame) (dtvideo_decoder_t * decoder, dt_av_frame_t * frame, AVPicture_t ** pic);
     int (*release) (dtvideo_decoder_t * decoder);
-    char *name;
+    const char *name;
     video_format_t vfmt;        // not used, for ffmpeg
     int type;
     struct video_decoder_operation *next;
