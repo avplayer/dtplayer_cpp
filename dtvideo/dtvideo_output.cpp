@@ -1,3 +1,6 @@
+
+#include <vector>
+
 #include "dtvideo_output.h"
 #include "dtvideo_decoder.h"
 #include "dtvideo.h"
@@ -7,22 +10,17 @@
 #define REGISTER_VO(X, x)	 	\
 	{							\
 		extern vo_operations_t vo_##x##_ops; \
-		register_vo(&vo_##x##_ops); \
+		register_vo(vo_##x##_ops); \
 	}
 
 static int64_t last_time = -1;
 
-static vo_operations_t *first_vo = NULL;
+static std::vector<vo_operations_t> vo_operations;
 
-static void register_vo (vo_operations_t * vo)
+static void register_vo (const vo_operations_t & vo)
 {
-    vo_operations_t **p;
-    p = &first_vo;
-    while (*p != NULL)
-        p = &(*p)->next;
-    *p = vo;
-    vo->next = NULL;
-    dt_info (TAG, "register vo. id:%d name:%s \n", vo->id, vo->name);
+	vo_operations.push_back(vo);
+	dt_info (TAG, "register vo. id:%d name:%s \n", vo.id, vo.name);
 }
 
 void vout_register_all ()
@@ -41,30 +39,30 @@ void vout_register_all ()
 /*default alsa*/
 int select_vo_device (dtvideo_output_t * vo, int id)
 {
-    vo_operations_t **p;
-    p = &first_vo;
-
     if(id == -1) // user did not choose vo,use default one
     {
-        if(!*p)
+        if(vo_operations.empty())
             return -1;
-        vo->vout_ops = *p;
-        dt_info(TAG,"SELECT VO:%s \n",(*p)->name);
+        vo->vout_ops = & vo_operations[0];
+        dt_info(TAG,"SELECT VO:%s \n",vo->vout_ops->name);
         return 0;
     }
 
-    while (*p != NULL && (*p)->id != id)
-    {
-        p = &(*p)->next;
-    }
-    if (!*p)
-    {
-        dt_error (TAG, "no valid vo device found\n");
-        return -1;
-    }
-    vo->vout_ops = *p;
-    dt_info(TAG,"SELECT VO:%s \n",(*p)->name);
-    return 0;
+    std::vector< vo_operations_t >::iterator it = vo_operations.begin();
+
+    //  TODO: 这部分稍后使用 c++11 的 std::find_if 和 lambda 实现
+    while (it !=  vo_operations.end())
+	{
+		if (it->id ==  id)
+		{
+			vo->vout_ops = &(*it);
+		    dt_info(TAG,"SELECT VO:%s \n",vo->vout_ops->name);
+			return 0;
+		}
+	}
+
+    dt_error (TAG, "no valid vo device found\n");
+    return -1;
 }
 
 int video_output_start (dtvideo_output_t * vo)

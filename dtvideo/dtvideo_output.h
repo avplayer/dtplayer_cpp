@@ -19,7 +19,6 @@ typedef struct _vo_t
     int (*vo_stop) (dtvideo_output_t * ao);
     int (*vo_render) (dtvideo_output_t * ao, AVPicture_t * pic);
     void *handle;
-    struct _vo_t *next;
 } vo_operations_t;
 
 typedef enum
