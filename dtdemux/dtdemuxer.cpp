@@ -1,3 +1,6 @@
+
+#include <vector>
+
 #include "dtdemuxer.h"
 #include "dtstream_api.h"
 
@@ -6,18 +9,13 @@
 #define REGISTER_DEMUXER(X,x) \
     {                         \
         extern demuxer_wrapper_t demuxer_##x; \
-        register_demuxer(&demuxer_##x);     \
+        register_demuxer(demuxer_##x);     \
     }
-static demuxer_wrapper_t *g_demuxer = NULL;
+static std::vector<demuxer_wrapper_t> demuxer_wrappers;
 
-static void register_demuxer (demuxer_wrapper_t * wrapper)
+static void register_demuxer (const demuxer_wrapper_t & wrapper)
 {
-    demuxer_wrapper_t **p;
-    p = &g_demuxer;
-    while (*p != NULL)
-        p = &((*p)->next);
-    *p = wrapper;
-    wrapper->next = NULL;
+	demuxer_wrappers.push_back(wrapper);
 }
 
 void demuxer_register_all ()
@@ -30,21 +28,23 @@ void demuxer_register_all ()
 
 static int demuxer_select (dtdemuxer_context_t * dem_ctx)
 {
-    if (!g_demuxer)
+    if (demuxer_wrappers.empty())
         return -1;
     int score = 0;
-    demuxer_wrapper_t *entry = g_demuxer;
-    while(entry != NULL)
+
+    std::vector< demuxer_wrapper_t >::iterator entry = demuxer_wrappers.begin();
+
+    while(entry != demuxer_wrappers.end())
     {
-        score = (entry)->probe(entry,dem_ctx);
+        score = (entry)->probe(&(*entry),dem_ctx);
         if(score == 1)
             break;
-        entry = entry->next;
+        entry ++;
     }
-    if(!entry)
+    if(entry == demuxer_wrappers.end())
         return -1;
-    dem_ctx->demuxer = entry;
-    dt_info(TAG,"SELECT DEMUXER:%s \n",entry->name);
+    dem_ctx->demuxer = &(*entry);
+    dt_info(TAG,"SELECT DEMUXER:%s \n", entry->name);
     return 0;
 }
 

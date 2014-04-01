@@ -30,7 +30,6 @@ typedef struct demuxer_wrapper
     int (*close) (struct demuxer_wrapper * wrapper);
     void *demuxer_priv;         // point to priv context
     void *parent;               // point to parent, dtdemuxer_context_t
-    struct demuxer_wrapper *next;
 } demuxer_wrapper_t;
 
 typedef struct
