@@ -1,3 +1,6 @@
+
+#include <vector>
+
 #include "dtaudio.h"
 
 //#define DTAUDIO_DECODER_DUMP 0
@@ -6,19 +9,14 @@
 #define REGISTER_ADEC(X,x)	 	\
 	{							\
 		extern dec_audio_wrapper_t adec_##x##_ops; 	\
-		register_adec(&adec_##x##_ops); 	\
+		register_adec(adec_##x##_ops); 	\
 	}
-static dec_audio_wrapper_t *first_adec = NULL;
+static std::vector<dec_audio_wrapper_t> dec_audio_wrappers;
 
-static void register_adec (dec_audio_wrapper_t * adec)
+static void register_adec (const dec_audio_wrapper_t & adec)
 {
-    dec_audio_wrapper_t **p;
-    p = &first_adec;
-    while (*p != NULL)
-        p = &(*p)->next;
-    *p = adec;
-    dt_info (TAG, "[%s:%d] register adec, name:%s fmt:%d \n", __FUNCTION__, __LINE__, (*p)->name, (*p)->afmt);
-    adec->next = NULL;
+	dec_audio_wrappers.push_back(adec);
+    dt_info (TAG, "[%s:%d] register adec, name:%s fmt:%d \n", __FUNCTION__, __LINE__, adec.name, adec.afmt);
 }
 
 void adec_register_all ()
@@ -36,23 +34,24 @@ void adec_register_all ()
 
 static int select_audio_decoder (dtaudio_decoder_t * decoder)
 {
-    dec_audio_wrapper_t **p;
     dtaudio_para_t *para = &(decoder->aparam);
-    p = &first_adec;
-    while (*p != NULL)
+
+    std::vector< dec_audio_wrapper_t >::iterator it = dec_audio_wrappers.begin();
+
+    while (it != dec_audio_wrappers.end())
     {
-        if ((*p)->afmt != para->afmt && (*p)->afmt != AUDIO_FORMAT_UNKOWN)
-            p = &(*p)->next;
+        if (it->afmt != para->afmt && it->afmt != AUDIO_FORMAT_UNKOWN)
+            it ++;
         else                    //fmt found, or ffmpeg found
             break;
     }
-    if (!*p)
+    if (it == dec_audio_wrappers.end())
     {
         dt_info (DTAUDIO_LOG_TAG, "[%s:%d]no valid audio decoder found afmt:%d\n", __FUNCTION__, __LINE__, para->afmt);
         return -1;
     }
-    decoder->dec_wrapper = *p;
-    dt_info (TAG, "[%s:%d] select--%s audio decoder \n", __FUNCTION__, __LINE__, (*p)->name);
+    decoder->dec_wrapper = &(*it);
+    dt_info (TAG, "[%s:%d] select--%s audio decoder \n", __FUNCTION__, __LINE__, it->name);
     return 0;
 }
 

@@ -38,7 +38,6 @@ typedef struct dec_audio_wrapper
     audio_format_t afmt;        //not used, for ffmpeg
     int type;
     void *adec_priv;
-    struct dec_audio_wrapper *next;
     void *parent;
 } dec_audio_wrapper_t;
 
