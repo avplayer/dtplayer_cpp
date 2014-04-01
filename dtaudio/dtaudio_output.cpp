@@ -1,3 +1,6 @@
+
+#include <vector>
+
 #include "dtaudio_output.h"
 #include "dtaudio.h"
 
@@ -6,18 +9,13 @@
 #define REGISTER_AO(X, x)	 	\
 	{							\
 		extern ao_wrapper_t ao_##x##_ops; 	\
-		register_ao(&ao_##x##_ops); 	\
+		register_ao(ao_##x##_ops); 	\
 	}
-static ao_wrapper_t *g_ao = NULL;
+static std::vector<ao_wrapper_t> ao_wrappers;
 
-static void register_ao (ao_wrapper_t * ao)
+static void register_ao (const ao_wrapper_t & ao)
 {
-    ao_wrapper_t **p;
-    p = &g_ao;
-    while (*p != NULL)
-        p = &((*p)->next);
-    *p = ao;
-    ao->next = NULL;
+	ao_wrappers.push_back(ao);
 }
 
 void aout_register_all ()
@@ -42,27 +40,24 @@ void aout_register_all ()
 /*default alsa*/
 static int select_ao_device (dtaudio_output_t * ao, int id)
 {
-    ao_wrapper_t **p;
-    p = &g_ao;
-
     if(id == -1) // user did not choose vo,use default one
     {
-        if(!*p)
+        if(ao_wrappers.empty())
             return -1;
-        ao->aout_ops = *p;
+        ao->aout_ops = & ao_wrappers[0];
         return 0;
     }
 
-    while (*p != NULL && (*p)->id != id)
-        p = &(*p)->next;
-    if (!*p)
-    {
-        dt_info (LOG_TAG, "no valid ao device found\n");
-        return -1;
-    }
-    ao->aout_ops = *p;
-    dt_info (TAG, "[%s:%d]select--%s audio device \n", __FUNCTION__, __LINE__, (*p)->name);
-    return 0;
+	for (std::vector< ao_wrapper_t >::iterator it = ao_wrappers.begin(); it != ao_wrappers.end(); it++)
+	{
+		if (it->id ==  id)
+		{
+			dt_info (TAG, "[%s:%d]select--%s audio device \n", __FUNCTION__, __LINE__, it->name);
+			return 0;
+		}
+	}
+    dt_info (LOG_TAG, "no valid ao device found\n");
+    return -1;
 }
 
 int audio_output_start (dtaudio_output_t * ao)

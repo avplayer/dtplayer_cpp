@@ -25,7 +25,7 @@ typedef struct ao_wrapper
     int64_t (*ao_latency) (struct ao_wrapper *wrapper);
     int (*ao_level) (struct ao_wrapper *wrapper);
     int (*ao_write) (struct ao_wrapper *wrapper, uint8_t * buf, int size);
-    struct ao_wrapper *next;
+
     void *ao_priv;
     void *parent;
 } ao_wrapper_t;
