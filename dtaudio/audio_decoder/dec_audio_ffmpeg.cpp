@@ -1,11 +1,14 @@
 #include "../dtaudio_decoder.h"
 
 //include ffmpeg header
+
+extern "C" {
 #include "libavformat/avformat.h"
 #include "libavcodec/avcodec.h"
 //#include "libavresample/avresample.h"
 #include "libswscale/swscale.h"
 #include "libswresample/swresample.h"
+}
 
 #define TAG "AUDIO-DECODER-FFMPEG"
 static AVFrame *frame;
@@ -18,7 +21,7 @@ static enum AVCodecID convert_to_id(int format)
         case AUDIO_FORMAT_AAC:
             return AV_CODEC_ID_AAC;
         default:
-            return 0;
+            return AV_CODEC_ID_NONE;
     }
 }
 
@@ -174,7 +177,7 @@ int ffmpeg_adec_decode (dec_audio_wrapper_t *wrapper, adec_ctrl_t *pinfo)
         //out frame too large, realloc out buf
         if(pinfo->outsize < frame_tmp.linesize[0])
         {
-            pinfo->outptr = realloc(pinfo->outptr,frame_tmp.linesize[0] * 2);
+            pinfo->outptr = (uint8_t*) realloc(pinfo->outptr,frame_tmp.linesize[0] * 2);
             pinfo->outsize = frame_tmp.linesize[0] * 2;
         }
         

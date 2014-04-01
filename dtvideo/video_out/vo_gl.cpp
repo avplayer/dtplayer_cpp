@@ -138,7 +138,7 @@ static void init_texture (void)
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, dw, dh, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 #if 0
     glDisable (GL_BLEND);
-    glDepthMask (GL_FALSE);
+    glDepthMask (GL_false);
     glDisable (GL_CULL_FACE);
 #endif
     glFlush ();
@@ -197,7 +197,7 @@ static int vo_gl_init (void)
         /* get an appropriate visual */
         gl_vinfo = glXChooseVisual (XDisplay, DefaultScreen (XDisplay), attributeList);
         /* create a GLX context */
-        cx = glXCreateContext (XDisplay, gl_vinfo, None, GL_TRUE);
+        cx = glXCreateContext (XDisplay, gl_vinfo, None, GL_true);
         /* create a color map */
         cmap = XCreateColormap (XDisplay, RootWindow (XDisplay, gl_vinfo->screen), gl_vinfo->visual, AllocNone);
         /* create a window */

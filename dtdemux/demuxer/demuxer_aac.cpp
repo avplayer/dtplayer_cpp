@@ -31,7 +31,7 @@
  * 3     reserve
  *
  * */
-static char *aac_profile[4] = {
+static const char *aac_profile[4] = {
     "MainProfile",
     "LC",
     "SSR",
@@ -326,7 +326,7 @@ static int demuxer_aac_read_frame(demuxer_wrapper_t *wrapper, dt_av_frame_t *fra
 	    if(len > 0)
 	    {
 
-            uint8_t *data = malloc(len);
+            uint8_t *data = (uint8_t*) malloc(len);
 		    if(!data)
 			{
 			    dt_error(TAG, "read frame, NEW_PACKET(%d)FAILED\n", len);

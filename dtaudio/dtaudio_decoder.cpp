@@ -94,7 +94,7 @@ static void *audio_decode_loop (void *arg)
     memset(pinfo,0,sizeof(*pinfo));
     pinfo->channels = para->channels;
     pinfo->samplerate = para->samplerate;
-    pinfo->outptr = malloc(MAX_ONE_FRAME_OUT_SIZE);
+    pinfo->outptr = (uint8_t*)malloc(MAX_ONE_FRAME_OUT_SIZE);
     pinfo->outsize = MAX_ONE_FRAME_OUT_SIZE;
 
     dt_info (TAG, "[%s:%d] AUDIO DECODE START \n", __FUNCTION__, __LINE__);
@@ -151,7 +151,7 @@ static void *audio_decode_loop (void *arg)
             frame_size = 0;
         }
         if (rest_size)
-            frame_data = malloc (frame.size + rest_size);
+            frame_data = (uint8_t*)malloc (frame.size + rest_size);
         else
             frame_data = frame.data;
         if (!frame_data)
@@ -213,7 +213,7 @@ static void *audio_decode_loop (void *arg)
         else if (used == 0)
         {
             //maybe need more data
-            rest_data = malloc (pinfo->inlen);
+            rest_data = (uint8_t*)malloc (pinfo->inlen);
             if (rest_data == NULL)
             {
                 dt_error ("[%s:%d] rest_data malloc failed\n", __FUNCTION__, __LINE__);
@@ -267,6 +267,10 @@ static void *audio_decode_loop (void *arg)
 
 int audio_decoder_init (dtaudio_decoder_t * decoder)
 {
+	dec_audio_wrapper_t *wrapper;
+	dtaudio_context_t *actx;
+	int size;
+
     int ret = 0;
     pthread_t tid;
     /*select decoder */
@@ -284,7 +288,7 @@ int audio_decoder_init (dtaudio_decoder_t * decoder)
     else
         dt_info (TAG, "[%s:%d] param: num:%d den:%d\n", __FUNCTION__, __LINE__, decoder->aparam.num, decoder->aparam.den);
     
-    dec_audio_wrapper_t *wrapper = decoder->dec_wrapper;
+    wrapper = decoder->dec_wrapper;
     ret = wrapper->init (wrapper,decoder);
     if (ret < 0)
     {
@@ -293,8 +297,8 @@ int audio_decoder_init (dtaudio_decoder_t * decoder)
     }
     dt_info (TAG, "[%s:%d] audio decoder init ok\n", __FUNCTION__, __LINE__);
     /*init pcm buffer */
-    dtaudio_context_t *actx = (dtaudio_context_t *) decoder->parent;
-    int size = DTAUDIO_PCM_BUF_SIZE;
+    actx = (dtaudio_context_t *) decoder->parent;
+    size = DTAUDIO_PCM_BUF_SIZE;
     ret = buf_init (&actx->audio_decoded_buf, size);
     if (ret < 0)
     {

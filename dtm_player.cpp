@@ -90,7 +90,7 @@ int main (int argc, char **argv)
     if (!para)
         return -1;
     strcpy (para->file_name, argv[1]);
-    para->update_cb = (void *) update_cb;
+    para->update_cb =  update_cb;
     //para->no_audio=1;
     //para->no_video=1;
     para->width = 720;

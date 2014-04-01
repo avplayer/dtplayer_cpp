@@ -29,18 +29,18 @@ typedef struct{
 static int faad_init (dec_audio_wrapper_t *wrapper,void *parent)
 {
     wrapper->parent = parent;
-    faad_ctx_t *this = (faad_ctx_t *)malloc(sizeof(faad_ctx_t));
-    if(!this)
+    faad_ctx_t *_this = (faad_ctx_t *)malloc(sizeof(faad_ctx_t));
+    if(!_this)
         return -1;
-    memset(this,0,sizeof(*this));
-    wrapper->adec_priv = this;
+    memset(_this,0,sizeof(*_this));
+    wrapper->adec_priv = _this;
     
     return 0;
 }
 
-static int faad_open_dec(faad_ctx_t *this)
+static int faad_open_dec(faad_ctx_t *_this)
 {
-    uint8_t *buf = this->buffer;
+    uint8_t *buf = _this->buffer;
     int tagsize = 0;
     int bitrate;
     int header_type = 0;
@@ -57,7 +57,7 @@ static int faad_open_dec(faad_ctx_t *this)
             (buf[8] <<  7) | (buf[9] <<  0);
 
         tagsize += 10;
-        this->bytes_consumed += 10;
+        _this->bytes_consumed += 10;
     }
 
     hDecoder = NeAACDecOpen();
@@ -87,7 +87,7 @@ static int faad_open_dec(faad_ctx_t *this)
         dt_info(TAG,"bitrate:%d \n",bitrate);
     }
 
-    if ((bread = NeAACDecInit(hDecoder, this->buffer,this->bytes_into_buffer, &samplerate, &channels)) < 0)
+    if ((bread = NeAACDecInit(hDecoder, _this->buffer,_this->bytes_into_buffer, &samplerate, &channels)) < 0)
     {
         /* If some error initializing occured, skip the file */
         dt_error(TAG, "Error initializing decoder library.\n");
@@ -109,41 +109,41 @@ static int faad_open_dec(faad_ctx_t *this)
         break;
     }
    
-    this->faad_dec = hDecoder;
-    this->faad_cfg = config;
+    _this->faad_dec = hDecoder;
+    _this->faad_cfg = config;
     
-    dt_info(TAG,"faad open dec ok,consume:%d \n",this->bytes_consumed);
+    dt_info(TAG,"faad open dec ok,consume:%d \n",_this->bytes_consumed);
     return 0;
 }
 
 static int faad_decode (dec_audio_wrapper_t *wrapper, adec_ctrl_t *pinfo)
 {
  
-    faad_ctx_t *this = (faad_ctx_t *) wrapper->adec_priv;
-    this->buffer = pinfo->inptr + pinfo->consume;
-    this->bytes_into_buffer = pinfo->inlen;
-    this->bytes_consumed = 0; 
+    faad_ctx_t *_this = (faad_ctx_t *) wrapper->adec_priv;
+    _this->buffer = pinfo->inptr + pinfo->consume;
+    _this->bytes_into_buffer = pinfo->inlen;
+    _this->bytes_consumed = 0;
     
-    if( !this->faad_dec)
+    if( !_this->faad_dec)
     {
-        if(faad_open_dec(this) < 0)
-            return -1; // skip this frame
-        return this->bytes_consumed;
+        if(faad_open_dec(_this) < 0)
+            return -1; // skip _this frame
+        return _this->bytes_consumed;
     }
 
     void *sample_buffer;
-    NeAACDecHandle hDecoder = this->faad_dec;
-    NeAACDecFrameInfo *frameInfo = &this->faad_finfo;
+    NeAACDecHandle hDecoder = _this->faad_dec;
+    NeAACDecFrameInfo *frameInfo = &_this->faad_finfo;
     uint8_t *data = pinfo->outptr;
 
     dt_debug(TAG,"start decoding %d data bytes...\n", pinfo->inlen);
     
-    sample_buffer = NeAACDecDecode(hDecoder, frameInfo,this->buffer, this->bytes_into_buffer);
+    sample_buffer = NeAACDecDecode(hDecoder, frameInfo,_this->buffer, _this->bytes_into_buffer);
 
     if (frameInfo->error > 0)
     {
         dt_error(TAG, "Error: %s\n",NeAACDecGetErrorMessage(frameInfo->error));
-        return -1; // need to skip this frame
+        return -1; // need to skip _this frame
     }
     //decode ok, but no out, maybe need more data
     if ((frameInfo->error == 0) && (frameInfo->samples == 0))
@@ -151,7 +151,7 @@ static int faad_decode (dec_audio_wrapper_t *wrapper, adec_ctrl_t *pinfo)
 
     if(pinfo->outsize < frameInfo->samples *2)
     {
-        pinfo->outptr = realloc(pinfo->outptr,frameInfo->samples *3);
+        pinfo->outptr = (uint8_t*)realloc(pinfo->outptr,frameInfo->samples *3);
         pinfo->outsize = frameInfo->samples *3;
     }
 
@@ -170,12 +170,12 @@ static int faad_decode (dec_audio_wrapper_t *wrapper, adec_ctrl_t *pinfo)
 
 static int faad_release (dec_audio_wrapper_t * wrapper)
 {
-    faad_ctx_t *this = (faad_ctx_t *)wrapper->adec_priv;
-    if(!this)
+    faad_ctx_t *_this = (faad_ctx_t *)wrapper->adec_priv;
+    if(!_this)
         return 0;
-    if(this->faad_dec)
-        NeAACDecClose(this->faad_dec);
-    free(this);
+    if(_this->faad_dec)
+        NeAACDecClose(_this->faad_dec);
+    free(_this);
     wrapper->adec_priv = NULL;
     return 0;
 }

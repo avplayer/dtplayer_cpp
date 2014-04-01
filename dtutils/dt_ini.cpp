@@ -125,11 +125,11 @@ bool OpenIniFile (cchr * FileName)
 
     if (FileName == NULL)
     {
-        return FALSE;
+        return false;
     }
     if ((IniFile = fopen (FileName, "r")) == NULL)
     {
-        return FALSE;
+        return false;
     }
 
     while (fgets (Str, 255, IniFile) != NULL)
@@ -142,7 +142,7 @@ bool OpenIniFile (cchr * FileName)
         pEntry = MakeNewEntry ();
         if (pEntry == NULL)
         {
-            return FALSE;
+            return false;
         }
 
 #ifdef INI_REMOVE_CR
@@ -160,7 +160,7 @@ bool OpenIniFile (cchr * FileName)
         if (pEntry->Text == NULL)
         {
             FreeAllMem ();
-            return FALSE;
+            return false;
         }
         strcpy (pEntry->Text, Str);
         pStr = strchr (Str, ';');
@@ -187,7 +187,7 @@ bool OpenIniFile (cchr * FileName)
     }
     fclose (IniFile);
     IniFile = NULL;
-    return TRUE;
+    return true;
 }
 
 /*=========================================================================
@@ -226,7 +226,7 @@ bool WriteIniFile (const char *FileName)
     if ((IniFile = fopen (FileName, "wb")) == NULL)
     {
         FreeAllMem ();
-        return FALSE;
+        return false;
     }
 
     while (pEntry != NULL)
@@ -245,7 +245,7 @@ bool WriteIniFile (const char *FileName)
     fflush (IniFile);
     fclose (IniFile);
     IniFile = NULL;
-    return TRUE;
+    return true;
 }
 
 /*=========================================================================
@@ -256,11 +256,11 @@ void WriteString (cchr * Section, cchr * pKey, cchr * Value)
     EFIND List;
     char Str[255];
 
-    if (ArePtrValid (Section, pKey, Value) == FALSE)
+    if (ArePtrValid (Section, pKey, Value) == false)
     {
         return;
     }
-    if (FindpKey (Section, pKey, &List) == TRUE)
+    if (FindpKey (Section, pKey, &List) == true)
     {
         sprintf (Str, "%s=%s%s", List.KeyText, Value, List.Comment);
         FreeMem (List.pKey->Text);
@@ -319,11 +319,11 @@ void WriteDouble (cchr * Section, cchr * pKey, double Value)
 const char *ReadString (cchr * Section, cchr * pKey, cchr * Default)
 {
     EFIND List;
-    if (ArePtrValid (Section, pKey, Default) == FALSE)
+    if (ArePtrValid (Section, pKey, Default) == false)
     {
         return Default;
     }
-    if (FindpKey (Section, pKey, &List) == TRUE)
+    if (FindpKey (Section, pKey, &List) == true)
     {
         strcpy (Result, List.ValText);
         return Result;
@@ -375,7 +375,7 @@ bool DeleteKey (cchr * Section, cchr * pKey)
     struct ENTRY *pPrev;
     struct ENTRY *pNext;
 
-    if (FindpKey (Section, pKey, &List) == TRUE)
+    if (FindpKey (Section, pKey, &List) == true)
     {
         pPrev = List.pKey->pPrev;
         pNext = List.pKey->pNext;
@@ -389,9 +389,9 @@ bool DeleteKey (cchr * Section, cchr * pKey)
         }
         FreeMem (List.pKey->Text);
         FreeMem (List.pKey);
-        return TRUE;
+        return true;
     }
-    return FALSE;
+    return false;
 }
 
 /* Here we start with our helper functions */
@@ -480,7 +480,7 @@ bool FindpKey (cchr * Section, cchr * pKey, EFIND * List)
     pEntry = FindSection (Section);
     if (pEntry == NULL)
     {
-        return FALSE;
+        return false;
     }
     List->pSec = pEntry;
     List->KeyText[0] = 0;
@@ -489,7 +489,7 @@ bool FindpKey (cchr * Section, cchr * pKey, EFIND * List)
     pEntry = pEntry->pNext;
     if (pEntry == NULL)
     {
-        return FALSE;
+        return false;
     }
     sprintf (Search, "%s", pKey);
     strupr (Search);
@@ -498,7 +498,7 @@ bool FindpKey (cchr * Section, cchr * pKey, EFIND * List)
         if ((pEntry->Type == tpSECTION) || /* Stop after next section or EOF */
             (pEntry->Type == tpNULL))
         {
-            return FALSE;
+            return false;
         }
         if (pEntry->Type == tpKEYVALUE)
         {
@@ -522,13 +522,13 @@ bool FindpKey (cchr * Section, cchr * pKey, EFIND * List)
                 {
                     strcpy (List->ValText, pText + 1);
                     List->pKey = pEntry;
-                    return TRUE;
+                    return true;
                 }
             }
         }
         pEntry = pEntry->pNext;
     }
-    return FALSE;
+    return false;
 }
 
 /*=========================================================================
@@ -539,14 +539,14 @@ bool AddItem (char Type, cchr * Text)
     struct ENTRY *pEntry = MakeNewEntry ();
     if (pEntry == NULL)
     {
-        return FALSE;
+        return false;
     }
     pEntry->Type = Type;
     pEntry->Text = (char *) malloc (strlen (Text) + 1);
     if (pEntry->Text == NULL)
     {
         free (pEntry);
-        return FALSE;
+        return false;
     }
     strcpy (pEntry->Text, Text);
     pEntry->pNext = NULL;
@@ -555,7 +555,7 @@ bool AddItem (char Type, cchr * Text)
         CurEntry->pNext = pEntry;
     }
     CurEntry = pEntry;
-    return TRUE;
+    return true;
 }
 
 /*=========================================================================
@@ -570,18 +570,18 @@ bool AddItemAt (struct ENTRY * EntryAt, char Mode, cchr * Text)
     struct ENTRY *pNewEntry;
     if (EntryAt == NULL)
     {
-        return FALSE;
+        return false;
     }
     pNewEntry = (struct ENTRY *) malloc (sizeof (ENTRY));
     if (pNewEntry == NULL)
     {
-        return FALSE;
+        return false;
     }
     pNewEntry->Text = (char *) malloc (strlen (Text) + 1);
     if (pNewEntry->Text == NULL)
     {
         free (pNewEntry);
-        return FALSE;
+        return false;
     }
     strcpy (pNewEntry->Text, Text);
     if (EntryAt->pNext == NULL) /* No following nodes. */
@@ -596,7 +596,7 @@ bool AddItemAt (struct ENTRY * EntryAt, char Mode, cchr * Text)
     }
     pNewEntry->pPrev = EntryAt;
     pNewEntry->Type = Mode;
-    return TRUE;
+    return true;
 }
 
 /*=========================================================================
@@ -606,9 +606,9 @@ bool AddSectionAndpKey (cchr * Section, cchr * pKey, cchr * Value)
 {
     char Text[255];
     sprintf (Text, "[%s]", Section);
-    if (AddItem (tpSECTION, Text) == FALSE)
+    if (AddItem (tpSECTION, Text) == false)
     {
-        return FALSE;
+        return false;
     }
     sprintf (Text, "%s=%s", pKey, Value);
     return AddItem (tpKEYVALUE, Text);
@@ -705,7 +705,7 @@ void CloseTypeFile ()
 
 static int FileIsOpen = 0;
 
-int GetPrivateProfileString (char *appNam, char *keyNam, char *keyVal, char *filNam)
+int GetPrivateProfileString (const char *appNam, const char *keyNam, char *keyVal, const char *filNam)
 {
     while (s_read_flags)
         usleep (10000);
@@ -830,9 +830,9 @@ int WritePrivateProfileString (char *appNam, char *keyNam, char *keyVal, char *f
  *
  * */
 
-int GetEnv (char *appNam, char *keyNam, char *keyVal)
+int GetEnv (const char *appNam, const char *keyNam, char *keyVal)
 {
-    char *fileNam = INI_FILE;
+    const char *fileNam = INI_FILE;
     return GetPrivateProfileString (appNam, keyNam, keyVal, fileNam);
 }
 

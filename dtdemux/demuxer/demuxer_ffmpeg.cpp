@@ -2,14 +2,17 @@
 #include "../dtdemuxer.h"
 #include "dt_error.h"
 
+extern "C"{
 #include "libavformat/avformat.h"
+}
+
 #define TAG "DEMUX-FFMPEG"
 
 #include <string.h>
 
 typedef struct
 {
-    char *key;
+    const char *key;
     int value;
 } type_map_t;
 
@@ -140,14 +143,14 @@ static int demuxer_ffmpeg_read_frame (demuxer_wrapper_t * wrapper, dt_av_frame_t
     }
     //read frame ok
     if (has_video && cur_vidx == avpkt.stream_index)
-        frame->type = AVMEDIA_TYPE_VIDEO;
+        frame->type = (dt_media_type_t) AVMEDIA_TYPE_VIDEO;
     else if (has_audio && cur_aidx == avpkt.stream_index)
-        frame->type = AVMEDIA_TYPE_AUDIO;
+        frame->type = (dt_media_type_t)AVMEDIA_TYPE_AUDIO;
     else if (has_sub && cur_sidx == avpkt.stream_index)
-        frame->type = AVMEDIA_TYPE_SUBTITLE;
+        frame->type = (dt_media_type_t)AVMEDIA_TYPE_SUBTITLE;
     else
     {
-        frame->type = AVMEDIA_TYPE_UNKNOWN;
+        frame->type = (dt_media_type_t)AVMEDIA_TYPE_UNKNOWN;
         av_free_packet (&avpkt);
         return DTERROR_READ_AGAIN; // need to read again
     }
@@ -275,7 +278,7 @@ static int demuxer_ffmpeg_setup_info (demuxer_wrapper_t * wrapper, dt_media_info
     dt_info (TAG, "file name:%s duration:%lf\n", info->file_name, duration);
     info->file_size = avio_size (ic->pb);
 
-    info->format = media_format_convert (ic->iformat->name);
+    info->format = (media_format_t) media_format_convert (ic->iformat->name);
     if (info->format == MEDIA_FORMAT_INVALID)
         dt_warning (TAG, "get wrong media format\n");
 
@@ -295,7 +298,7 @@ static int demuxer_ffmpeg_setup_info (demuxer_wrapper_t * wrapper, dt_media_info
             vst_info->pix_fmt = pCodec->pix_fmt;
             vst_info->duration = (int64_t) (pStream->duration * pStream->time_base.num / pStream->time_base.den);
             vst_info->bit_rate = pCodec->bit_rate;
-            vst_info->format = video_format_convert (pCodec->codec_id);
+            vst_info->format = (video_format_t) video_format_convert (pCodec->codec_id);
             vst_info->sample_aspect_ratio.num = pStream->sample_aspect_ratio.num;
             vst_info->sample_aspect_ratio.den = pStream->sample_aspect_ratio.den;
             vst_info->frame_rate_ratio.num = pStream->r_frame_rate.num;
@@ -332,7 +335,7 @@ static int demuxer_ffmpeg_setup_info (demuxer_wrapper_t * wrapper, dt_media_info
             sst_info->id = pStream->id;
             sst_info->width = pCodec->width;
             sst_info->height = pCodec->height;
-            sst_info->format = subtitle_format_convert (pCodec->codec_id);
+            sst_info->format = (subtitle_format_t) subtitle_format_convert (pCodec->codec_id);
             sst_info->codec_priv = (void *) pCodec;
             info->sstreams[info->sst_num] = sst_info;
             info->sst_num++;

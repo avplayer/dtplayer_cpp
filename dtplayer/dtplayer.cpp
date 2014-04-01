@@ -54,6 +54,15 @@ static int player_server_release (dtplayer_context_t * dtp_ctx)
 
 int player_init (dtplayer_context_t * dtp_ctx)
 {
+	dtplayer_para_t *para;
+	player_ctrl_t *ctrl_info;
+    char value[512];
+    int sync_enable_ini = -1;
+    int no_audio_ini = -1;
+    int no_video_ini = -1;
+    int no_sub_ini = -1;
+
+
     int ret = 0;
     pthread_t tid;
     set_player_status (dtp_ctx, PLAYER_STATUS_INIT_ENTER);
@@ -75,9 +84,8 @@ int player_init (dtplayer_context_t * dtp_ctx)
     dtp_ctx->media_info = dtdemuxer_get_media_info (dtp_ctx->demuxer_priv);
 
     /* setup player ctrl info */
-    char value[512];
-    dtplayer_para_t *para = &dtp_ctx->player_para;
-    player_ctrl_t *ctrl_info = &dtp_ctx->ctrl_info;
+    para = &dtp_ctx->player_para;
+    ctrl_info = &dtp_ctx->ctrl_info;
     ctrl_info->start_time = dtp_ctx->media_info->start_time;
     ctrl_info->first_time = -1;
     ctrl_info->has_audio = (para->no_audio == -1) ? dtp_ctx->media_info->has_audio : (!para->no_audio);
@@ -90,7 +98,6 @@ int player_init (dtplayer_context_t * dtp_ctx)
         return -1;
     }
 
-    int sync_enable_ini = -1;
     if (GetEnv ("PLAYER", "player.syncenable", value) > 0)
         sync_enable_ini = atoi (value);
     if (para->sync_enable != -1)
@@ -103,9 +110,7 @@ int player_init (dtplayer_context_t * dtp_ctx)
     ctrl_info->cur_sst_index = (para->sub_index == -1) ? dtp_ctx->media_info->cur_sst_index : para->sub_index;
     dt_info (TAG, "ast_idx:%d vst_idx:%d sst_idx:%d \n", ctrl_info->cur_ast_index, ctrl_info->cur_vst_index, ctrl_info->cur_sst_index);
 
-    int no_audio_ini = -1;
-    int no_video_ini = -1;
-    int no_sub_ini = -1;
+
     if (GetEnv ("PLAYER", "player.noaudio", value) > 0)
         no_audio_ini = atoi (value);
     if (GetEnv ("PLAYER", "player.novideo", value) > 0)
@@ -147,7 +152,7 @@ int player_init (dtplayer_context_t * dtp_ctx)
     ctrl_info->height = para->height;
 
     /*create event loop */
-    ret = pthread_create (&tid, NULL, (void *) &event_handle_loop, (void *) dtp_ctx);
+    ret = pthread_create (&tid, NULL, ( void *(*) (void *) ) &event_handle_loop, (void *) dtp_ctx);
     if (ret == -1)
     {
         dt_error (TAG "file:%s [%s:%d] player io thread start failed \n", __FILE__, __FUNCTION__, __LINE__);

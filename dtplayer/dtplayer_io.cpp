@@ -27,7 +27,7 @@ int start_io_thread (dtplayer_context_t * dtp_ctx)
     pthread_t tid;
     dtp_ctx->io_loop.status = IO_LOOP_PAUSED;
     dtp_ctx->io_loop.flag = IO_FLAG_NULL;
-    int ret = pthread_create (&tid, NULL, (void *) &player_io_thread, (void *) dtp_ctx);
+    int ret = pthread_create (&tid, NULL, (void *(*)(void*) ) &player_io_thread, (void *) dtp_ctx);
     if (ret != 0)
     {
         dt_error (TAG "file:%s [%s:%d] player io thread crate failed \n", __FILE__, __FUNCTION__, __LINE__);

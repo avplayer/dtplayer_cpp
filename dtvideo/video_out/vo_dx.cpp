@@ -26,9 +26,9 @@
 
 #define LINE()	printf("%s,%d\n", __func__, __LINE__)
 
-#ifndef FALSE
-#define FALSE 0
-#define TRUE  (!FALSE)
+#ifndef false
+#define false 0
+#define true  (!false)
 #endif
 
 #define WND_CLASSNAME	"DawnLightPlayer"
@@ -221,7 +221,7 @@ static int DxCreateWindow (void)
     if (0 == RegisterClass (&wc))
     {
         av_log (NULL, AV_LOG_ERROR, "vo_dx: RegisterClass: %ld\n", GetLastError ());
-        return FALSE;
+        return false;
     }
 
     if (g_vidmode)
@@ -234,7 +234,7 @@ static int DxCreateWindow (void)
     if (NULL == g_hwnd)
     {
         av_log (NULL, AV_LOG_ERROR, "vo_dx: create window: %ld\n", GetLastError ());
-        return FALSE;
+        return false;
     }
 
     wc.hbrBackground = blackbrush;
@@ -243,7 +243,7 @@ static int DxCreateWindow (void)
     if (0 == RegisterClass (&wc))
     {
         av_log (NULL, AV_LOG_ERROR, "vo_dx: RegisterClass: %ld\n", GetLastError ());
-        return FALSE;
+        return false;
     }
 
     g_fs_hwnd = CreateWindow (FS_CLASSNAME, "", WS_POPUP, 0, 0, g_screen_width, g_screen_height, g_hwnd, NULL, hInstance, NULL);
@@ -252,7 +252,7 @@ static int DxCreateWindow (void)
         av_log (NULL, AV_LOG_ERROR, "vo_dx: create fs window: %ld\n", GetLastError ());
     }
 
-    return TRUE;
+    return true;
 }
 
 static int DxInitDirectDraw (void)
@@ -263,7 +263,7 @@ static int DxInitDirectDraw (void)
     if (hddraw_dll == NULL)
     {
         av_log (NULL, AV_LOG_ERROR, "vo_directx: failed loading ddraw.dll\n");
-        return FALSE;
+        return false;
     }
 
     OurDirectDrawCreateEx = (void *) GetProcAddress (hddraw_dll, "DirectDrawCreateEx");
@@ -272,13 +272,13 @@ static int DxInitDirectDraw (void)
         FreeLibrary (hddraw_dll);
         hddraw_dll = NULL;
         av_log (NULL, AV_LOG_ERROR, "vo_directx: ddraw.dll DirectDrawCreateEx not found\n");
-        return FALSE;
+        return false;
     }
 
     if (OurDirectDrawCreateEx (NULL, (VOID **) & g_lpdd, &IID_IDirectDraw7, NULL) != DD_OK)
     {
         av_log (NULL, AV_LOG_ERROR, "vo_dx: can't create draw object\n");
-        return FALSE;
+        return false;
     }
 
     if (g_vidmode)
@@ -286,7 +286,7 @@ static int DxInitDirectDraw (void)
         if (IDirectDraw_SetCooperativeLevel (g_lpdd, g_hwnd, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN) != DD_OK)
         {
             av_log (NULL, AV_LOG_ERROR, "vo_dx: can't set cooperative\n");
-            return FALSE;
+            return false;
         }
     }
     else
@@ -294,12 +294,12 @@ static int DxInitDirectDraw (void)
         if (IDirectDraw_SetCooperativeLevel (g_lpdd, g_hwnd, DDSCL_NORMAL) != DD_OK)
         {
             av_log (NULL, AV_LOG_ERROR, "vo_dx: can't set cooperative\n");
-            return FALSE;
+            return false;
         }
     }
 
     av_log (NULL, AV_LOG_INFO, "DirectDraw Object Init OK\n");
-    return TRUE;
+    return true;
 }
 
 static int DxCreatePrimarySurface (void)
@@ -318,8 +318,8 @@ static int DxCreatePrimarySurface (void)
     ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
 
     if (IDirectDraw_CreateSurface (g_lpdd, &ddsd, &g_lpddsPrimary, NULL) == DD_OK)
-        return TRUE;
-    return FALSE;
+        return true;
+    return false;
 }
 
 static int DxCreateOverlay (void)
@@ -328,7 +328,7 @@ static int DxCreateOverlay (void)
     DDSURFACEDESC2 ddsdOverlay;
 
     if (!g_lpdd || !g_lpddsPrimary)
-        return FALSE;
+        return false;
 
     if (g_lpddsOverlay)
     {
@@ -364,9 +364,9 @@ static int DxCreateOverlay (void)
             if (IDirectDrawSurface_GetAttachedSurface (g_lpddsOverlay, &ddsdOverlay.ddsCaps, &g_lpddsBack) != DD_OK)
             {
                 av_log (NULL, AV_LOG_ERROR, "vo_dx: can't get back surface from overlay\n");
-                return FALSE;
+                return false;
             }
-            return TRUE;
+            return true;
         }
     }
 
@@ -390,10 +390,10 @@ static int DxCreateOverlay (void)
         }
     }
     if (i >= NUM_FORMATS)
-        return FALSE;
+        return false;
 
     g_lpddsBack = g_lpddsOverlay;
-    return TRUE;
+    return true;
 }
 
 static int DxCreateOffbuffer (void)
@@ -414,8 +414,8 @@ static int DxCreateOffbuffer (void)
     ddsd.dwHeight = g_image_height;
 
     if (IDirectDraw_CreateSurface (g_lpdd, &ddsd, &g_lpddsBack, 0) != DD_OK)
-        return FALSE;
-    return TRUE;
+        return false;
+    return true;
 }
 
 static int DxGetCaps (void)
@@ -425,7 +425,7 @@ static int DxGetCaps (void)
     ZeroMemory (&capsDrv, sizeof (capsDrv));
     capsDrv.dwSize = sizeof (capsDrv);
     if (IDirectDraw_GetCaps (g_lpdd, &capsDrv, NULL) != DD_OK)
-        return FALSE;
+        return false;
 
     if (capsDrv.dwCaps & DDCAPS_OVERLAYSTRETCH)
         g_StretchFactor1000 = capsDrv.dwMinOverlayStretch > 1000 ? capsDrv.dwMinOverlayStretch : 1000;
@@ -448,7 +448,7 @@ static int DxGetCaps (void)
 
     g_overlay_key = capsDrv.dwCKeyCaps & DDCKEYCAPS_DESTOVERLAY;
 
-    return TRUE;
+    return true;
 }
 
 static void vo_dx_zoom_size (int rate)
@@ -553,9 +553,9 @@ static int DxManageOverlay (void)
     {
         av_log (NULL, AV_LOG_ERROR, "update overlay faild , hide overlay\n");
         IDirectDrawSurface_UpdateOverlay (g_lpddsOverlay, NULL, g_lpddsPrimary, NULL, DDOVER_HIDE, NULL);
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
 }
 
 static void flip_page (void)
@@ -670,40 +670,40 @@ static int vo_dx_init (void)
     dx = (g_screen_width - dw) / 2;
     dy = (g_screen_height - dh) / 2;
 
-    if (FALSE == DxCreateWindow ())
+    if (false == DxCreateWindow ())
     {
         av_log (NULL, AV_LOG_ERROR, "DxCreateWindow step\n");
         return -1;
     }
 
-    if (FALSE == DxInitDirectDraw ())
+    if (false == DxInitDirectDraw ())
     {
         av_log (NULL, AV_LOG_ERROR, "DxInitDirectDraw step\n");
         return -1;
     }
 
-    if (FALSE == DxCreatePrimarySurface ())
+    if (false == DxCreatePrimarySurface ())
     {
         av_log (NULL, AV_LOG_ERROR, "DxCreatePrimarySurface step\n");
         return -1;
     }
 
-    if (FALSE == DxCreateOverlay ())
+    if (false == DxCreateOverlay ())
     {
         av_log (NULL, AV_LOG_ERROR, "DxCreateOverlay step\n");
-        if (FALSE == DxCreateOffbuffer ())
+        if (false == DxCreateOffbuffer ())
         {
             av_log (NULL, AV_LOG_ERROR, "DxCreateOffbuffer step\n");
             return -1;
         }
     }
 
-    if (FALSE == DxGetCaps ())
+    if (false == DxGetCaps ())
     {
         av_log (NULL, AV_LOG_ERROR, "DxGetCaps step\n");
         return -1;
     }
-    if (FALSE == DxManageOverlay ())
+    if (false == DxManageOverlay ())
     {
         av_log (NULL, AV_LOG_ERROR, "DxManageOverlay step\n");
         return -1;

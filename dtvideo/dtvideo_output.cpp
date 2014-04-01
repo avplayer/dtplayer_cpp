@@ -128,7 +128,7 @@ static void *video_output_thread (void *args)
     AVPicture_t *pic;
     int64_t sys_clock;          //contrl video display
     int64_t cur_time, time_diff;
-    dtvideo_context_t *vctx = vo->parent;
+    dtvideo_context_t *vctx = (dtvideo_context_t*) vo->parent;
     for (;;)
     {
         if (vo->status == VO_STATUS_EXIT)

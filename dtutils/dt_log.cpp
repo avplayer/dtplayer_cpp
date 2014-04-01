@@ -18,7 +18,7 @@ static int check_level (int level)
     return level >= dt_log_level;
 }
 
-void dt_log (void *tag, int level, const char *fmt, ...)
+void dt_log (const char *tag, int level, const char *fmt, ...)
 {
     if (!check_level (level))
         return;
@@ -30,7 +30,7 @@ void dt_log (void *tag, int level, const char *fmt, ...)
     va_end (vl);
 }
 
-void dt_error (void *tag, const char *fmt, ...)
+void dt_error (const char *tag, const char *fmt, ...)
 {
     if (!check_level (DT_LOG_ERROR))
         return;
@@ -43,7 +43,7 @@ void dt_error (void *tag, const char *fmt, ...)
 
 }
 
-void dt_debug (void *tag, const char *fmt, ...)
+void dt_debug (const char *tag, const char *fmt, ...)
 {
     if (!check_level (DT_LOG_DEBUG))
         return;
@@ -55,7 +55,7 @@ void dt_debug (void *tag, const char *fmt, ...)
     va_end (vl);
 }
 
-void dt_warning (void *tag, const char *fmt, ...)
+void dt_warning (const char *tag, const char *fmt, ...)
 {
     if (!check_level (DT_LOG_WARNING))
         return;
@@ -67,7 +67,7 @@ void dt_warning (void *tag, const char *fmt, ...)
     va_end (vl);
 }
 
-void dt_info (void *tag, const char *fmt, ...)
+void dt_info (const char *tag, const char *fmt, ...)
 {
     if (!check_level (DT_LOG_INFO))
         return;

@@ -17,7 +17,7 @@ typedef struct{
 static int stream_file_open (stream_wrapper_t * wrapper,char *stream_name)
 {
     int fd = -1;
-    file_ctx_t *ctx = malloc(sizeof(*ctx));
+    file_ctx_t *ctx = (file_ctx_t*) malloc(sizeof(*ctx));
     stream_ctrl_t *info = &wrapper->info;
     memset(info,0,sizeof(*info));
     fd = open(stream_name,O_RDONLY);
@@ -70,7 +70,7 @@ static int stream_file_seek (stream_wrapper_t * wrapper, int64_t pos, int whence
 
 static int stream_file_close (stream_wrapper_t * wrapper)
 {
-    file_ctx_t *ctx = malloc(sizeof(*ctx));
+    file_ctx_t *ctx = (file_ctx_t*) malloc(sizeof(*ctx));
     close(ctx->fd);
     free(ctx);
     wrapper->stream_priv = NULL;

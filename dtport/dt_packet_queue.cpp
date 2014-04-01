@@ -24,7 +24,7 @@ int packet_queue_put_frame (dt_packet_queue_t * queue, dt_av_frame_t * frame)
         return -1;
     }
     dt_packet_list_t *list;
-    list = malloc (sizeof (dt_packet_list_t));
+    list = (dt_packet_list_t*) malloc (sizeof (dt_packet_list_t));
     if (!list)
         return -1;
     //list->frame=*frame;

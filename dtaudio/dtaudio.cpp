@@ -314,7 +314,7 @@ int audio_init (dtaudio_context_t * actx)
     if (ret < 0)
         goto err3;
     /*create event handle thread */
-    ret = pthread_create (&tid, NULL, (void *) event_handle_loop, (void *) actx);
+    ret = pthread_create (&tid, NULL,  event_handle_loop, (void *) actx);
     if (ret != 0)
     {
         dt_info (DTAUDIO_LOG_TAG, "create dtaudio thread failed\n");

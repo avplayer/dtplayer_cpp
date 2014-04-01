@@ -17,7 +17,7 @@ typedef struct{
 
 static int vo_sdl2_init (dtvideo_output_t * vo)
 {
-    sdl2_ctx_t *ctx = malloc(sizeof(sdl2_ctx_t));
+    sdl2_ctx_t *ctx = (sdl2_ctx_t*) malloc(sizeof(sdl2_ctx_t));
     memset(ctx,0,sizeof(*ctx));
     dt_lock_init (&ctx->vo_mutex, NULL);
     vo->vout_ops->handle = (void *)ctx;

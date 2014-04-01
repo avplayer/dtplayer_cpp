@@ -9,11 +9,11 @@ aux_source_directory( . LIBDEMUXSOURCES)
 
 if(FFMPEG_FOUND)
 add_definitions(-DENABLE_DEMUXER_FFMPEG)
-list(APPEND LIBDEMUXSOURCES  demuxer/demuxer_ffmpeg.c)
+list(APPEND LIBDEMUXSOURCES  demuxer/demuxer_ffmpeg.cpp)
 endif()
 
 add_definitions(-DENABLE_DEMUXER_AAC)
-list(APPEND LIBDEMUXSOURCES demuxer/demuxer_aac.c)
+list(APPEND LIBDEMUXSOURCES demuxer/demuxer_aac.cpp)
 
 add_library(dtdemux STATIC ${LIBDEMUXSOURCES} )
 

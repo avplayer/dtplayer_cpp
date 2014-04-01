@@ -1,2 +1,2 @@
 
-add_library(dtutils STATIC dt_buffer.c dt_event.c dt_ini.c dt_lock.c dt_log.c dt_queue.c dt_time.c)
+add_library(dtutils STATIC dt_buffer.cpp dt_event.cpp dt_ini.cpp dt_lock.cpp dt_log.cpp dt_queue.cpp dt_time.cpp)

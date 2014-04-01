@@ -5,8 +5,8 @@ typedef struct
     int filter;
 } dtaudio_filter_t;
 
-int audio_filter_init ();
-int audio_filter_start ();
-int audio_filter_stop ();
-int audio_filter_release ();
+int audio_filter_init (dtaudio_filter_t*);
+int audio_filter_start (dtaudio_filter_t*);
+int audio_filter_stop (dtaudio_filter_t*);
+int audio_filter_release (dtaudio_filter_t*);
 #endif

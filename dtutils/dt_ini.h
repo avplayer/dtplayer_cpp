@@ -71,9 +71,9 @@ typedef const char cchr;
 #ifndef __cplusplus
 //typedef char bool;
 #define true  1
-#define TRUE  1
+#define true  1
 #define false 0
-#define FALSE 0
+#define false 0
 #endif
 
 #define tpNULL       0
@@ -87,7 +87,7 @@ struct ENTRY
     char *Text;
     struct ENTRY *pPrev;
     struct ENTRY *pNext;
-} ENTRY;
+};
 
 typedef struct
 {
@@ -121,7 +121,7 @@ void CloseIniFile ();
 bool WriteIniFile (cchr * FileName);
 void CloseTypeFile ();
 //ssg add
-int GetPrivateProfileString (char *appNam, char *keyNam, char *keyVal, char *fileNam);
+int GetPrivateProfileString (const char *appNam, const char *keyNam, char *keyVal, const char *fileNam);
 int WritePrivateProfileString (char *appNam, char *keyNam, char *keyVal, char *filNam);
 int OpenTypeFile (char *filNam);
 int GetTypeKeyVal (char *appNam, char *keyNam, char *keyVal);
@@ -129,6 +129,6 @@ int SetTypeKeyVal (char *appNam, char *keyNam, char *keyVal);
 void CloseWriteFile (char *filNam);
 
 /*API ADDED BY DTSOFT*/
-int GetEnv (char *appNam, char *keyNam, char *keyVal);
+int GetEnv (const char *appNam, const char *keyNam, char *keyVal);
 
 #endif

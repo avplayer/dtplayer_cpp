@@ -34,7 +34,7 @@ typedef struct dec_audio_wrapper
     int (*init) (struct dec_audio_wrapper * wrapper,void *parent);
     int (*decode_frame) (struct dec_audio_wrapper * wrapper, adec_ctrl_t *pinfo);
     int (*release) (struct dec_audio_wrapper * wrapper);
-    char *name;
+    const char *name;
     audio_format_t afmt;        //not used, for ffmpeg
     int type;
     void *adec_priv;

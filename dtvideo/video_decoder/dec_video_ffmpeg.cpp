@@ -2,12 +2,15 @@
  *video decoder interface using ffmpeg
  * */
 
-#include "libavcodec/avcodec.h"
 #include "../dtvideo_decoder.h"
 
 //include ffmpeg header
+
+extern "C"
+{
 #include "libavcodec/avcodec.h"
 #include "libswscale/swscale.h"
+}
 
 #define TAG "VDEC-FFMPEG"
 static AVFrame *frame;
@@ -16,7 +19,7 @@ static struct SwsContext *pSwsCtx = NULL;;
 static int img_convert (AVPicture * dst, int dst_pix_fmt, AVFrame * src, int src_pix_fmt, int src_width, int src_height, int dest_width, int dest_height)
 {
     //pSwsCtx = sws_getContext(src_width, src_height, src_pix_fmt,dest_width, dest_height, dst_pix_fmt,SWS_BICUBIC, NULL, NULL, NULL);
-    pSwsCtx = sws_getCachedContext (pSwsCtx, src_width, src_height, src->format, dest_width, dest_height, dst_pix_fmt, SWS_BICUBIC, NULL, NULL, NULL);
+    pSwsCtx = sws_getCachedContext (pSwsCtx, src_width, src_height, (AVPixelFormat) src->format, dest_width, dest_height, (AVPixelFormat)dst_pix_fmt, SWS_BICUBIC, NULL, NULL, NULL);
     sws_scale (pSwsCtx, src->data, src->linesize, 0, src_height, dst->data, dst->linesize);
     return 0;
 }
@@ -74,13 +77,13 @@ static int output_picture (dtvideo_decoder_t * decoder, AVFrame * src_frame, int
 {
     uint8_t *buffer;
     int numBytes;
-    AVPicture_t *pict = malloc (sizeof (AVPicture_t));
+    AVPicture_t *pict = (AVPicture_t*) malloc (sizeof (AVPicture_t));
     memset (pict, 0, sizeof (AVPicture_t));
     AVPicture *dest_pic = (AVPicture *) (pict);
     // Allocate an AVFrame structure
-    numBytes = avpicture_get_size (decoder->para.d_pixfmt, decoder->para.d_width, decoder->para.d_height);
+    numBytes = avpicture_get_size ((AVPixelFormat)( decoder->para.d_pixfmt), decoder->para.d_width, decoder->para.d_height);
     buffer = (uint8_t *) malloc (numBytes * sizeof (uint8_t));
-    avpicture_fill ((AVPicture *) dest_pic, buffer, decoder->para.d_pixfmt, decoder->para.d_width, decoder->para.d_height);
+    avpicture_fill ((AVPicture *) dest_pic, buffer, (AVPixelFormat)decoder->para.d_pixfmt, decoder->para.d_width, decoder->para.d_height);
 
     // Convert the image from its native format to YV12
     img_convert ((AVPicture *) dest_pic, decoder->para.d_pixfmt, src_frame, decoder->para.s_pixfmt, decoder->para.s_width, decoder->para.s_height, decoder->para.d_width, decoder->para.d_height);

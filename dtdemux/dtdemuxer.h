@@ -20,7 +20,7 @@ typedef enum{
 
 typedef struct demuxer_wrapper
 {
-    char *name;
+    const char *name;
     int id;
     int (*probe) (struct demuxer_wrapper *wrapper,void *parent);
     int (*open) (struct demuxer_wrapper * wrapper);

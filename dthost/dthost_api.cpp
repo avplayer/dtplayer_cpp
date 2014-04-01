@@ -48,6 +48,7 @@ int dthost_stop (void *host_priv)
 
 int dthost_init (void **host_priv, dthost_para_t * para)
 {
+	dthost_context_t *hctx;
     int ret = 0;
     if (*host_priv)
     {
@@ -55,7 +56,7 @@ int dthost_init (void **host_priv, dthost_para_t * para)
         ret = -1;
         goto ERR0;
     }
-    dthost_context_t *hctx = malloc (sizeof (dthost_context_t));
+    hctx = (dthost_context_t*) malloc (sizeof (dthost_context_t));
     if (!hctx)
     {
         dt_info (TAG, "[%s:%d] dthost_context_t malloc failed\n", __FUNCTION__, __LINE__);

@@ -37,7 +37,7 @@ add_subdirectory(dtvideo)
 add_subdirectory(dtaudio)
 
 
-add_executable(dtmplayer dtm_player.c version.c)
+add_executable(dtmplayer dtm_player.cpp version.cpp)
 target_link_libraries(dtmplayer ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(dtmplayer dtplayercore  dthost dtport dtdemux dtstream dtvideo dtaudio dtutils)
 

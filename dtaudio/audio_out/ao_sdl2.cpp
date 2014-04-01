@@ -24,11 +24,13 @@ static void sdl2_cb(void *userdata,uint8_t *buf,int size)
 
 static int ao_sdl2_init (ao_wrapper_t *wrapper, void *parent)
 {
+	SDL_AudioSpec *pwanted;
+
     int ret = 0;
     dtaudio_output_t *ao = (dtaudio_output_t *)parent;
     dtaudio_para_t *ppara = &ao->para;
     wrapper->parent = parent;
-    sdl_ao_ctx_t *ctx = malloc(sizeof(*ctx));
+    sdl_ao_ctx_t *ctx = (sdl_ao_ctx_t*)malloc(sizeof(*ctx));
     if(!ctx)
     {
         dt_info(TAG,"SDL CTX MALLOC FAILED \n");
@@ -45,7 +47,7 @@ static int ao_sdl2_init (ao_wrapper_t *wrapper, void *parent)
     if (!SDL_WasInit(SDL_INIT_AUDIO))
         SDL_Init(SDL_INIT_AUDIO);
 
-    SDL_AudioSpec *pwanted = &ctx->wanted;
+    pwanted = &ctx->wanted;
     //set audio paras
     pwanted->freq = ppara->dst_samplerate;       // sample rate
     pwanted->format = AUDIO_S16;             // bps

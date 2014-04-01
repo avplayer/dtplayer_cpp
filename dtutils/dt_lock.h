@@ -1,7 +1,7 @@
 #ifndef DT_LOCK_H
 #define DT_LOCK_H
 
-#include "pthread.h"
+#include <pthread.h>
 
 #define dt_lock_t         pthread_mutex_t
 #define dt_lock_init(x,v) pthread_mutex_init(x,v)

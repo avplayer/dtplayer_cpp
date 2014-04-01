@@ -27,7 +27,7 @@
 static dt_server_mgt_t server_mgt;
 static event_server_t main_server;
 
-static void *event_transport_loop ();
+static void *event_transport_loop (void*);
 
 int dt_event_server_init ()
 {
@@ -53,7 +53,7 @@ int dt_event_server_init ()
         return -1;
     }
 
-    ret = pthread_create (&tid, NULL, (void *) &event_transport_loop, NULL);
+    ret = pthread_create (&tid, NULL, event_transport_loop, NULL);
     if (ret != 0)
     {
         dt_error (TAG, "TRANSTROP LOOP CREATE FAILED \n");
@@ -161,10 +161,11 @@ int dt_remove_server (event_server_t * server)
 
     dt_info (TAG, "REMOVE %s \n", server->name);
     /*remove all events */
-    if (count == 0)
-        goto REMOVE_SERVICE;
     event_t *event = server->event;
     event_t *event_next = event->next;
+
+    if (count == 0)
+        goto REMOVE_SERVICE;
 
     while (event)
     {
@@ -310,7 +311,7 @@ static int dt_transport_event (event_t * event, dt_server_mgt_t * mgt)
     return ret;
 }
 
-static void *event_transport_loop ()
+static void *event_transport_loop (void*)
 {
     dt_server_mgt_t *mgt = &server_mgt;
     event_server_t *server_hub = mgt->server;
