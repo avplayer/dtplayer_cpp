@@ -46,7 +46,6 @@ typedef struct
     int64_t current_pts;
     int64_t last_valid_pts;
     /*other */
-    pthread_t msg_thread_pid;
     dtvideo_status_t video_status;
 
     int event_loop_id;

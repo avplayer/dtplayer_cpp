@@ -6,6 +6,8 @@
 #include "dtaudio_api.h"
 #include <functional>
 
+#include <thread>
+
 typedef enum
 {
     ADEC_STATUS_IDLE,
@@ -56,7 +58,7 @@ struct dtaudio_decoder
 {
     dtaudio_para_t aparam;
     dec_audio_wrapper_t *dec_wrapper;
-    pthread_t audio_decoder_pid;
+	std::thread audio_decoder_thread;
     adec_status_t status;
     int decode_err_cnt;
     int decode_offset;

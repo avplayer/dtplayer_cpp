@@ -64,7 +64,6 @@ int player_init (dtplayer_context_t * dtp_ctx)
 
 
     int ret = 0;
-    pthread_t tid;
     set_player_status (dtp_ctx, PLAYER_STATUS_INIT_ENTER);
     dt_info (TAG, "[%s:%d] START PLAYER INIT\n", __FUNCTION__, __LINE__);
     dtp_ctx->file_name = dtp_ctx->player_para.file_name;
@@ -150,16 +149,9 @@ int player_init (dtplayer_context_t * dtp_ctx)
     /*dest width height */
     ctrl_info->width = para->width;
     ctrl_info->height = para->height;
-
-    /*create event loop */
-    ret = pthread_create (&tid, NULL, ( void *(*) (void *) ) &event_handle_loop, (void *) dtp_ctx);
-    if (ret == -1)
-    {
-        dt_error (TAG "file:%s [%s:%d] player io thread start failed \n", __FILE__, __FUNCTION__, __LINE__);
-        goto ERR2;
-    }
-    dt_info (TAG, "[%s:%d] create event handle loop thread id = %lu\n", __FUNCTION__, __LINE__, tid);
-    dtp_ctx->event_loop_id = tid;
+	
+	dtp_ctx->event_loop_thread = std::thread(event_handle_loop,dtp_ctx);
+	
     dt_info (TAG, "[%s:%d] END PLAYER INIT, RET = %d\n", __FUNCTION__, __LINE__, ret);
     set_player_status (dtp_ctx, PLAYER_STATUS_INIT_EXIT);
     player_handle_cb (dtp_ctx);

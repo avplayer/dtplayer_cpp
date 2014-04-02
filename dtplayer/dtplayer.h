@@ -13,11 +13,13 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <thread>
+
 typedef struct
 {
     int status;                 // 0 start 1 pause 2 quit
     int flag;
-    pthread_t tid;
+    std::thread io_loop_thread;
 } io_loop_t;
 
 typedef struct
@@ -58,7 +60,7 @@ typedef struct dtplayer_context
     int (*update_cb) (player_state_t * state); // update player info to uplevel
 
     io_loop_t io_loop;
-    pthread_t event_loop_id;
+	std::thread event_loop_thread;
 
     void *player_server;
 } dtplayer_context_t;

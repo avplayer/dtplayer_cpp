@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <thread>
+
 #define LOG_TAG "DTAUDIO-OUTPUT"
 #define PCM_WRITE_SIZE 1024
 
@@ -60,7 +62,7 @@ typedef struct dtaudio_output
     dtaudio_para_t para;
     ao_wrapper_t *aout_ops;
     ao_status_t status;
-    pthread_t output_thread_pid;
+	std::thread audio_output_thread;
     ao_state_t state;
 
     uint64_t last_valid_latency;

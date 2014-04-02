@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <string.h>
 
+#include <thread>
+
 typedef struct dtvideo_output dtvideo_output_t;
 
 typedef struct _vo_t
@@ -52,7 +54,7 @@ struct dtvideo_output
     dtvideo_para_t para;
     vo_operations_t *vout_ops;
     vo_status_t status;
-    pthread_t output_thread_pid;
+    std::thread video_output_thread;
     vo_state_t state;
 
     uint64_t last_valid_latency;

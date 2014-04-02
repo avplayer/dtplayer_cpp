@@ -7,6 +7,8 @@
 #include "dt_av.h"
 #include "dtvideo_api.h"
 
+#include <thread>
+
 typedef enum
 {
     VDEC_STATUS_IDLE,
@@ -41,7 +43,7 @@ struct dtvideo_decoder
 {
     dtvideo_para_t para;
     dec_video_wrapper_t *dec_wrapper;
-    pthread_t video_decoder_pid;
+    std::thread video_decoder_thread;
     vdec_status_t status;
     int decode_err_cnt;
 

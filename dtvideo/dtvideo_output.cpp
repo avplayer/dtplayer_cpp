@@ -87,7 +87,7 @@ int video_output_resume (dtvideo_output_t * vo)
 int video_output_stop (dtvideo_output_t * vo)
 {
     vo->status = VO_STATUS_EXIT;
-    pthread_join (vo->output_thread_pid, NULL);
+    vo->video_output_thread.join();
     vo->vout_ops->vo_stop (vo);
     dt_info (TAG, "[%s:%d] vout stop ok \n", __FUNCTION__, __LINE__);
     return 0;
@@ -226,7 +226,6 @@ static void *video_output_thread (void *args)
 int video_output_init (dtvideo_output_t * vo, int vo_id)
 {
     int ret = 0;
-    pthread_t tid;
     
     /*select ao device */
     ret = select_vo_device (vo, vo_id);
@@ -235,14 +234,7 @@ int video_output_init (dtvideo_output_t * vo, int vo_id)
     vo->vout_ops->vo_init (vo);
     dt_info (TAG, "[%s:%d] video output init success\n", __FUNCTION__, __LINE__);
 
-    /*start aout pthread */
-    ret = pthread_create (&tid, NULL, video_output_thread, (void *) vo);
-    if (ret != 0)
-    {
-        dt_error (TAG, "[%s:%d] create video output thread failed\n", __FUNCTION__, __LINE__);
-        return ret;
-    }
-    vo->output_thread_pid = tid;
+    vo->video_output_thread = std::thread(video_output_thread,vo);
     dt_info (TAG, "[%s:%d] create video output thread success\n", __FUNCTION__, __LINE__);
     return 0;
 }

@@ -271,7 +271,6 @@ int audio_decoder_init (dtaudio_decoder_t * decoder)
 	int size;
 
     int ret = 0;
-    pthread_t tid;
     /*select decoder */
     ret = select_audio_decoder (decoder);
     if (ret < 0)
@@ -304,15 +303,8 @@ int audio_decoder_init (dtaudio_decoder_t * decoder)
         ret = -1;
         goto ERR1;
     }
-    /*create thread */
-    ret = pthread_create (&tid, NULL, audio_decode_loop, (void *) decoder);
-    if (ret != 0)
-    {
-        dt_info (DTAUDIO_LOG_TAG, "create audio decoder thread failed\n");
-        ret = -1;
-        goto ERR2;
-    }
-    decoder->audio_decoder_pid = tid;
+
+    decoder->audio_decoder_thread = std::thread(audio_decode_loop,decoder);	
     audio_decoder_start (decoder);
     return ret;
   ERR2:
@@ -334,7 +326,7 @@ int audio_decoder_stop (dtaudio_decoder_t * decoder)
     dec_audio_wrapper_t *wrapper = decoder->dec_wrapper;
     /*Decode thread exit */
     decoder->status = ADEC_STATUS_EXIT;
-    pthread_join (decoder->audio_decoder_pid, NULL);
+	decoder->audio_decoder_thread.join();
     wrapper->release (wrapper);
     /*uninit buf */
     dtaudio_context_t *actx = (dtaudio_context_t *) decoder->parent;

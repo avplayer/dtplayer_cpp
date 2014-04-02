@@ -31,7 +31,6 @@ static void *event_transport_loop (void*);
 
 int dt_event_server_init ()
 {
-    pthread_t tid;
     int ret = 0;
 
     server_mgt.server = NULL;
@@ -53,13 +52,7 @@ int dt_event_server_init ()
         return -1;
     }
 
-    ret = pthread_create (&tid, NULL, event_transport_loop, NULL);
-    if (ret != 0)
-    {
-        dt_error (TAG, "TRANSTROP LOOP CREATE FAILED \n");
-        return -1;
-    }
-    server_mgt.transport_loop_id = tid;
+	server_mgt.transport_loop_thread = std::thread(event_transport_loop,nullptr);
     dt_info (TAG, "TRANSTROP LOOP CREATE OK, TID:%d \n", tid);
     return 0;
 }
@@ -75,7 +68,7 @@ int dt_event_server_release ()
 
     /*stop loop */
     mgt->exit_flag = 1;
-    pthread_join (mgt->transport_loop_id, NULL);
+    server_mgt.transport_loop_thread.join();
     /*
      * for main server, we just remove event
      * for normal server, need to remove event and server

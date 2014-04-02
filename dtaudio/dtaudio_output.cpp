@@ -86,7 +86,7 @@ int audio_output_resume (dtaudio_output_t * ao)
 int audio_output_stop (dtaudio_output_t * ao)
 {
     ao->status = AO_STATUS_EXIT;
-    pthread_join (ao->output_thread_pid, NULL);
+    ao->audio_output_thread.join();
     ao_wrapper_t *wrapper = ao->aout_ops;
     wrapper->ao_stop (wrapper);
     dt_info (TAG, "[%s:%d] aout stop ok \n", __FUNCTION__, __LINE__);
@@ -180,7 +180,6 @@ static void *audio_output_thread (void *args)
 int audio_output_init (dtaudio_output_t * ao, int ao_id)
 {
     int ret = 0;
-    pthread_t tid;
     
     /*select ao device */
     ret = select_ao_device (ao, ao_id);
@@ -191,14 +190,8 @@ int audio_output_init (dtaudio_output_t * ao, int ao_id)
     wrapper->ao_init (wrapper,ao);
     dt_info (TAG, "[%s:%d] audio output init success\n", __FUNCTION__, __LINE__);
     
-    /*start aout pthread */
-    ret = pthread_create (&tid, NULL, audio_output_thread, (void *) ao);
-    if (ret != 0)
-    {
-        dt_error (TAG, "[%s:%d] create audio output thread failed\n", __FUNCTION__, __LINE__);
-        return ret;
-    }
-    ao->output_thread_pid = tid;
+    ao->audio_output_thread = std::thread(audio_output_thread,ao);
+	
     dt_info (TAG, "[%s:%d] create audio output thread success\n", __FUNCTION__, __LINE__);
     return ret;
 }

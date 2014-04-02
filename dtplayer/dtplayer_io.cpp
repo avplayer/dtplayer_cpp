@@ -24,16 +24,9 @@ static int player_write_frame (dtplayer_context_t * dtp_ctx, dt_av_frame_t * fra
 
 int start_io_thread (dtplayer_context_t * dtp_ctx)
 {
-    pthread_t tid;
     dtp_ctx->io_loop.status = IO_LOOP_PAUSED;
     dtp_ctx->io_loop.flag = IO_FLAG_NULL;
-    int ret = pthread_create (&tid, NULL, (void *(*)(void*) ) &player_io_thread, (void *) dtp_ctx);
-    if (ret != 0)
-    {
-        dt_error (TAG "file:%s [%s:%d] player io thread crate failed \n", __FILE__, __FUNCTION__, __LINE__);
-        return -1;
-    }
-    dtp_ctx->io_loop.tid = tid;
+    dtp_ctx->io_loop.io_loop_thread = std::thread(player_io_thread,dtp_ctx);
     dtp_ctx->io_loop.status = IO_LOOP_RUNNING;
     dt_info (TAG, "IO Thread start ok\n");
     return 0;
@@ -60,7 +53,7 @@ int stop_io_thread (dtplayer_context_t * dtp_ctx)
 {
     dtp_ctx->io_loop.flag = IO_FLAG_NULL;
     dtp_ctx->io_loop.status = IO_LOOP_QUIT;
-    pthread_join (dtp_ctx->io_loop.tid, NULL);
+    dtp_ctx->io_loop.io_loop_thread.join();
     //dt_info(TAG,"io thread quit ok\n");
     return 0;
 }

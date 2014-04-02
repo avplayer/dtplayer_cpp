@@ -3,6 +3,8 @@
 
 #include "dt_lock.h"
 
+#include <thread>
+
 typedef struct event
 {
     int type;
@@ -30,7 +32,7 @@ typedef struct event_server_mgt
     dt_lock_t server_lock;
     int server_count;
     int exit_flag;
-    pthread_t transport_loop_id;
+    std::thread transport_loop_thread;
 } dt_server_mgt_t;
 
 int dt_event_server_init ();

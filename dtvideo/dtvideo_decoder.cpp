@@ -138,7 +138,6 @@ static void *video_decode_loop (void *arg)
 int video_decoder_init (dtvideo_decoder_t * decoder)
 {
     int ret = 0;
-    pthread_t tid;
     
     /*select decoder */
     ret = select_video_decoder (decoder);
@@ -162,14 +161,8 @@ int video_decoder_init (dtvideo_decoder_t * decoder)
         dt_error (TAG, "create video out queue failed\n");
         return -1;
     }
-    /*create thread */
-    ret = pthread_create (&tid, NULL, video_decode_loop, (void *) decoder);
-    if (ret != 0)
-    {
-        dt_error (TAG, "create audio decoder thread failed\n");
-        return ret;
-    }
-    decoder->video_decoder_pid = tid;
+    
+    decoder->video_decoder_thread = std::thread(video_decode_loop,decoder);	
     video_decoder_start (decoder);
     //decoder->status=ADEC_STATUS_RUNNING;//start decode after init
     return 0;
@@ -194,8 +187,8 @@ int video_decoder_stop (dtvideo_decoder_t * decoder)
 {
     /*Decode thread exit */
     decoder->status = VDEC_STATUS_EXIT;
-    pthread_join (decoder->video_decoder_pid, NULL);
-     /**/ decoder->dec_wrapper->release (decoder);
+	decoder->video_decoder_thread.join();
+    decoder->dec_wrapper->release (decoder);
     /*uninit buf */
     dtvideo_context_t *vctx = (dtvideo_context_t *) decoder->parent;
     //uninit_buf(&vctx->video_decoded_buf);     
