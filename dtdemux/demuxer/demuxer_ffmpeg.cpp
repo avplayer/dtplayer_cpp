@@ -9,6 +9,7 @@ extern "C"{
 #define TAG "DEMUX-FFMPEG"
 
 #include <string.h>
+#include <stdint.h>
 
 typedef struct
 {

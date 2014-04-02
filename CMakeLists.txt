@@ -17,6 +17,7 @@ find_package( faac )
 find_package( Threads )
 
 add_definitions(-D__STDC_CONSTANT_MACROS)
+add_definitions(-D__STDC_LIMIT_MACROS)
 
 #dont't define this, libbt need depreated api
 include_directories(${PROJECT_SOURCE_DIR})

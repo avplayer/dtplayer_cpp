@@ -18,13 +18,12 @@ typedef struct ao_wrapper
     const char *name;
 
     int (*ao_init) (struct ao_wrapper * wrapper, void *parent);
-    int (*ao_start) (struct ao_wrapper *wrapper);
     int (*ao_pause) (struct ao_wrapper * wrapper);
     int (*ao_resume) (struct ao_wrapper * wrapper);
     int (*ao_stop) (struct ao_wrapper *wrapper);
-    int64_t (*ao_latency) (struct ao_wrapper *wrapper);
-    int (*ao_level) (struct ao_wrapper *wrapper);
     int (*ao_write) (struct ao_wrapper *wrapper, uint8_t * buf, int size);
+    int (*ao_level) (struct ao_wrapper *wrapper);
+    int64_t (*ao_latency) (struct ao_wrapper *wrapper);
 
     void *ao_priv;
     void *parent;
