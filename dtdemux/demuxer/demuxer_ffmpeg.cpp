@@ -100,7 +100,7 @@ static int64_t pts_exchange (AVPacket * avpkt, dt_media_info_t * media_info)
     {
         num = media_info->vstreams[media_info->cur_vst_index]->time_base.num;
         den = media_info->vstreams[media_info->cur_vst_index]->time_base.den;
-        exchange = 90000 * num / den;
+        exchange = 90000 * num / (double)den;
     }
     else if (has_audio && cur_aidx == avpkt->stream_index)
     {
