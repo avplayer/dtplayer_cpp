@@ -18,17 +18,24 @@ typedef struct ao_wrapper
 {
     int id;
     const char *name;
-
-    int (*ao_init) (struct ao_wrapper * wrapper, void *parent);
-    int (*ao_pause) (struct ao_wrapper * wrapper);
-    int (*ao_resume) (struct ao_wrapper * wrapper);
-    int (*ao_stop) (struct ao_wrapper *wrapper);
-    int (*ao_write) (struct ao_wrapper *wrapper, uint8_t * buf, int size);
-    int (*ao_level) (struct ao_wrapper *wrapper);
-    int64_t (*ao_latency) (struct ao_wrapper *wrapper);
-
+	
+	std::function<int (struct ao_wrapper * wrapper, void *parent)> ao_init;
+	std::function<int (struct ao_wrapper * wrapper)> ao_pause;
+	std::function<int (struct ao_wrapper * wrapper)> ao_resume;
+	std::function<int (struct ao_wrapper * wrapper)> ao_stop;
+	std::function<int (struct ao_wrapper *wrapper, uint8_t * buf, int size)> ao_write;
+	std::function<int (struct ao_wrapper *wrapper)> ao_level;
+	std::function<int (struct ao_wrapper *wrapper)> ao_latency;
+    
     void *ao_priv;
     void *parent;
+
+    template<typename INIT, typename PAUSE, typename RESUME, typename STOP, typename WRITE, typename LEVEL, typename LATENCY>
+    ao_wrapper(int _id, const char * _name,
+		INIT _init, PAUSE _pause, RESUME _resume, STOP _stop, WRITE _write, LEVEL _level, LATENCY _latency)
+		  : name(_name), id(_id), ao_init(_init), ao_pause(_pause), ao_resume(_resume), ao_stop(_stop), ao_write(_write), ao_level(_level), ao_latency(_latency)
+	{
+	}    
 } ao_wrapper_t;
 
 #define dtao_format_t ao_id_t

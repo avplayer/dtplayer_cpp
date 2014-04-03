@@ -123,15 +123,5 @@ static int ao_sdl_stop (ao_wrapper_t * wrapper)
     }
     return 0;
 }
-    
-ao_wrapper_t ao_sdl_ops = {
-    .id = AO_ID_SDL,
-    .name = "sdl",
-    .ao_init = ao_sdl_init,
-    .ao_pause = ao_sdl_pause,
-    .ao_resume = ao_sdl_resume,
-    .ao_stop = ao_sdl_stop,
-    .ao_write = ao_sdl_play,
-    .ao_level = ao_sdl_level,
-    .ao_latency = ao_sdl_get_latency,
-};
+
+ao_wrapper_t ao_sdl_ops(AO_ID_SDL,"sdl",ao_sdl_init,ao_sdl_pause,ao_sdl_resume,ao_sdl_stop,ao_sdl_play,ao_sdl_level,ao_sdl_get_latency);

@@ -9,17 +9,17 @@
 
 #define REGISTER_VO(X, x)	 	\
 	{							\
-		extern vo_operations_t vo_##x##_ops; \
+		extern vo_wrapper_t vo_##x##_ops; \
 		register_vo(vo_##x##_ops); \
 	}
 
 static int64_t last_time = -1;
 
-static std::vector<vo_operations_t> vo_operations;
+static std::vector<vo_wrapper_t> g_vo;
 
-static void register_vo (const vo_operations_t & vo)
+static void register_vo (const vo_wrapper_t & vo)
 {
-	vo_operations.push_back(vo);
+	g_vo.push_back(vo);
 	dt_info (TAG, "register vo. id:%d name:%s \n", vo.id, vo.name);
 }
 
@@ -41,22 +41,22 @@ int select_vo_device (dtvideo_output_t * vo, int id)
 {
     if(id == -1) // user did not choose vo,use default one
     {
-        if(vo_operations.empty())
+        if(g_vo.empty())
             return -1;
-        vo->vout_ops = & vo_operations[0];
-        dt_info(TAG,"SELECT VO:%s \n",vo->vout_ops->name);
+        vo->wrapper = & g_vo[0];
+        dt_info(TAG,"SELECT VO:%s \n",vo->wrapper->name);
         return 0;
     }
 
-    std::vector< vo_operations_t >::iterator it = vo_operations.begin();
+    std::vector< vo_wrapper_t >::iterator it = g_vo.begin();
 
     //  TODO: 这部分稍后使用 c++11 的 std::find_if 和 lambda 实现
-	for (std::vector< vo_operations_t >::iterator it = vo_operations.begin(); it != vo_operations.end(); it++)
+	for (std::vector< vo_wrapper_t >::iterator it = g_vo.begin(); it != g_vo.end(); it++)
 	{
 		if (it->id ==  id)
 		{
-			vo->vout_ops = &(*it);
-		    dt_info(TAG,"SELECT VO:%s \n",vo->vout_ops->name);
+			vo->wrapper = &(*it);
+		    dt_info(TAG,"SELECT VO:%s \n",vo->wrapper->name);
 			return 0;
 		}
 	}
@@ -86,9 +86,10 @@ int video_output_resume (dtvideo_output_t * vo)
 
 int video_output_stop (dtvideo_output_t * vo)
 {
+	vo_wrapper_t *wrapper = vo->wrapper;
     vo->status = VO_STATUS_EXIT;
     vo->video_output_thread.join();
-    vo->vout_ops->vo_stop (vo);
+    wrapper->vo_stop (wrapper);
     dt_info (TAG, "[%s:%d] vout stop ok \n", __FUNCTION__, __LINE__);
     return 0;
 }
@@ -119,6 +120,7 @@ int video_output_get_level (dtvideo_output_t * ao)
 static void *video_output_thread (void *args)
 {
     dtvideo_output_t *vo = (dtvideo_output_t *) args;
+	vo_wrapper_t *wrapper = vo->wrapper;
     int ret, wlen;
     ret = wlen = 0;
     AVPicture_t *picture_pre;
@@ -204,7 +206,7 @@ static void *video_output_thread (void *args)
             }
         }
         /*display picture & update vpts */
-        ret = vo->vout_ops->vo_render (vo, pic);
+        ret = wrapper->vo_render (wrapper, pic);
         if (ret < 0)
         {
             printf ("frame toggle failed! \n");
@@ -225,13 +227,13 @@ static void *video_output_thread (void *args)
 
 int video_output_init (dtvideo_output_t * vo, int vo_id)
 {
-    int ret = 0;
-    
+    int ret = 0;    
     /*select ao device */
     ret = select_vo_device (vo, vo_id);
     if (ret < 0)
         return -1;
-    vo->vout_ops->vo_init (vo);
+	vo_wrapper_t *wrapper = vo->wrapper;
+    wrapper->vo_init (wrapper, vo);
     dt_info (TAG, "[%s:%d] video output init success\n", __FUNCTION__, __LINE__);
 
     vo->video_output_thread = std::thread(video_output_thread,vo);

@@ -230,6 +230,7 @@ typedef enum _AO_ID_
     AO_ID_EXAMPLE = -1,
     AO_ID_ALSA,                 // 0 default
     AO_ID_SDL,
+	AO_ID_SDL2,
     AO_ID_OSS,
     AO_ID_DSOUND,
 } dtao_format_t;

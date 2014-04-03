@@ -49,8 +49,10 @@ static void SaveFrame (AVFrame * pFrame, int width, int height, int iFrame)
 }
 #endif
 
-int ffmpeg_vdec_init (dtvideo_decoder_t * decoder)
+int ffmpeg_vdec_init (vd_wrapper_t *wrapper, void *parent)
 {
+	dtvideo_decoder_t * decoder = (dtvideo_decoder_t *)parent;
+	wrapper->parent = parent;
     //select video decoder and call init
     AVCodec *codec = NULL;
     AVCodecContext *avctxp = (AVCodecContext *) decoder->decoder_priv;
@@ -102,9 +104,10 @@ static int output_picture (dtvideo_decoder_t * decoder, AVFrame * src_frame, int
  *
  * */
 
-int ffmpeg_vdec_decode (dtvideo_decoder_t * decoder, dt_av_frame_t * dt_frame, AVPicture_t ** pic)
+int ffmpeg_vdec_decode (vd_wrapper_t *wrapper, dt_av_frame_t * dt_frame, AVPicture_t ** pic)
 {
     int ret = 0;
+	dtvideo_decoder_t * decoder = (dtvideo_decoder_t *)wrapper->parent;
     AVCodecContext *avctxp = (AVCodecContext *) decoder->decoder_priv;
     dt_debug (TAG, "[%s:%d] param-- w:%d h:%d  extr_si:%d \n", __FUNCTION__, __LINE__, avctxp->width, avctxp->height, avctxp->extradata_size);
     int got_picture = 0;
@@ -132,8 +135,9 @@ int ffmpeg_vdec_decode (dtvideo_decoder_t * decoder, dt_av_frame_t * dt_frame, A
     return ret;
 }
 
-int ffmpeg_vdec_release (dtvideo_decoder_t * decoder)
+int ffmpeg_vdec_release (vd_wrapper_t *wrapper)
 {
+	dtvideo_decoder_t * decoder = (dtvideo_decoder_t *)wrapper->parent;
     AVCodecContext *avctxp = (AVCodecContext *) decoder->decoder_priv;
     avcodec_close (avctxp);
     av_frame_free (&frame);
@@ -143,4 +147,4 @@ int ffmpeg_vdec_release (dtvideo_decoder_t * decoder)
     return 0;
 }
 
-dec_video_wrapper_t vdec_ffmpeg_ops(DT_TYPE_VIDEO, "ffmpeg video decoder", VIDEO_FORMAT_UNKOWN, ffmpeg_vdec_init, ffmpeg_vdec_decode, ffmpeg_vdec_release);
+vd_wrapper vdec_ffmpeg_ops(DT_TYPE_VIDEO, "ffmpeg video decoder", VIDEO_FORMAT_UNKOWN, ffmpeg_vdec_init, ffmpeg_vdec_decode, ffmpeg_vdec_release);

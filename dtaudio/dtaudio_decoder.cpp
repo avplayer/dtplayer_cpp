@@ -331,6 +331,7 @@ int audio_decoder_stop (dtaudio_decoder_t * decoder)
     /*uninit buf */
     dtaudio_context_t *actx = (dtaudio_context_t *) decoder->parent;
     buf_release (&actx->audio_decoded_buf);
+	dt_info(TAG,"ad stop ok\n");
     return 0;
 }
 

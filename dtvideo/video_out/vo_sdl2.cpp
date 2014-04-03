@@ -15,21 +15,23 @@ typedef struct{
     int sdl_inited;
 }sdl2_ctx_t;
 
-static int vo_sdl2_init (dtvideo_output_t * vo)
+static int vo_sdl2_init (vo_wrapper_t *wrapper, void *parent)
 {
+	wrapper->parent = parent;
     sdl2_ctx_t *ctx = (sdl2_ctx_t*) malloc(sizeof(sdl2_ctx_t));
     memset(ctx,0,sizeof(*ctx));
     dt_lock_init (&ctx->vo_mutex, NULL);
-    vo->vout_ops->handle = (void *)ctx;
+    wrapper->handle = (void *)ctx;
     dt_info (TAG, "sdl2 init OK\n");
     return 0;
 }
 
-static int sdl2_pre_init (dtvideo_output_t * vo)
+static int sdl2_pre_init (vo_wrapper_t *wrapper)
 {
     int flags;
-    sdl2_ctx_t *ctx = (sdl2_ctx_t *)vo->vout_ops->handle;
-    
+    sdl2_ctx_t *ctx = (sdl2_ctx_t *)wrapper->handle;
+    dtvideo_output_t *vo = (dtvideo_output_t *)wrapper->parent;
+	
     SDL_setenv("SDL_VIDEO_WINDOW_POS", "center", 1);
     SDL_setenv ("SDL_VIDEO_CENTERED", "1", 1);
     if (!SDL_WasInit(SDL_INIT_VIDEO))
@@ -91,13 +93,14 @@ static void SaveFrame (AVPicture_t * pFrame, int width, int height, int iFrame)
 }
 #endif
 
-static int vo_sdl2_render (dtvideo_output_t * vo, AVPicture_t * pict)
+static int vo_sdl2_render (vo_wrapper_t *wrapper, AVPicture_t * pict)
 {
     int ret = 0;
-    sdl2_ctx_t *ctx = (sdl2_ctx_t *)vo->vout_ops->handle;
+    sdl2_ctx_t *ctx = (sdl2_ctx_t *)wrapper->handle;
+	dtvideo_output_t *vo = (dtvideo_output_t *)wrapper->parent;
     if(!ctx->sdl_inited)
     {
-        ret = sdl2_pre_init(vo);
+        ret = sdl2_pre_init(wrapper);
         ctx->sdl_inited = !ret;
     }
 
@@ -123,9 +126,9 @@ static int vo_sdl2_render (dtvideo_output_t * vo, AVPicture_t * pict)
     return 0;
 }
 
-static int vo_sdl2_stop (dtvideo_output_t * vo)
+static int vo_sdl2_stop (vo_wrapper_t *wrapper)
 {
-    sdl2_ctx_t *ctx = (sdl2_ctx_t *)vo->vout_ops->handle;
+    sdl2_ctx_t *ctx = (sdl2_ctx_t *)wrapper->handle;
     dt_lock (&ctx->vo_mutex);
     if(ctx->sdl_inited) 
     {
@@ -136,15 +139,9 @@ static int vo_sdl2_stop (dtvideo_output_t * vo)
     }
     dt_unlock (&ctx->vo_mutex);
     free(ctx);
-    vo->vout_ops->handle = NULL;
+    wrapper->handle = NULL;
     dt_info (TAG, "stop vo sdl\n");
     return 0;
 }
 
-vo_operations_t vo_sdl2_ops = {
-    .id = VO_ID_SDL2,
-    .name = "sdl2",
-    .vo_init = vo_sdl2_init,
-    .vo_stop = vo_sdl2_stop,
-    .vo_render = vo_sdl2_render,
-};
+vo_wrapper_t vo_sdl2_ops(VO_ID_SDL2,"sdl2",vo_sdl2_init,vo_sdl2_render,vo_sdl2_stop);

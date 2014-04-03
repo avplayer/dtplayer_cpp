@@ -22,14 +22,22 @@ typedef struct demuxer_wrapper
 {
     const char *name;
     int id;
-    int (*probe) (struct demuxer_wrapper *wrapper,void *parent);
-    int (*open) (struct demuxer_wrapper * wrapper);
-    int (*read_frame) (struct demuxer_wrapper * wrapper, dt_av_frame_t * frame);
-    int (*setup_info) (struct demuxer_wrapper * wrapper, dt_media_info_t * info);
-    int (*seek_frame) (struct demuxer_wrapper * wrapper, int timestamp);
-    int (*close) (struct demuxer_wrapper * wrapper);
-    void *demuxer_priv;         // point to priv context
+    
+    std::function<int (struct demuxer_wrapper *wrapper, void *parent)>probe;
+	std::function<int (struct demuxer_wrapper *wrapper)>open;
+	std::function<int (struct demuxer_wrapper *wrapper, dt_av_frame_t * frame)>read_frame;
+	std::function<int (struct demuxer_wrapper *wrapper, dt_media_info_t * info)>setup_info;
+	std::function<int (struct demuxer_wrapper *wrapper, int timestamp)>seek_frame;
+	std::function<int (struct demuxer_wrapper *wrapper)>close;
+	
+	void *demuxer_priv;         // point to priv context
     void *parent;               // point to parent, dtdemuxer_context_t
+	
+	template <typename PROBE, typename OPEN, typename READ, typename SETUP, typename SEEK, typename CLOSE>
+	demuxer_wrapper(int _id, const char * _name, PROBE _probe, OPEN _open, READ _read, SETUP _setup, SEEK _seek, CLOSE _close)
+					:id(_id), name(_name), probe(_probe), open(_open), read_frame(_read), setup_info(_setup), seek_frame(_seek), close(_close)
+	{}
+    
 } demuxer_wrapper_t;
 
 typedef struct
