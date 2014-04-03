@@ -19,30 +19,32 @@ typedef enum
 
 typedef struct dtvideo_decoder dtvideo_decoder_t;
 
-typedef struct video_decoder_operation
+typedef struct vd_wrapper
 {
 
     const char *name;
     video_format_t vfmt;        // not used, for ffmpeg
     int type;
     
-    std::function<int(dtvideo_decoder_t * decoder)> init;
-    std::function<int(dtvideo_decoder_t * decoder, dt_av_frame_t * frame, AVPicture_t ** pic)> decode_frame;
-    std::function<int(dtvideo_decoder_t * decoder)> release;
-    
+    std::function<int(struct vd_wrapper * wrapper, void *parent)> init;
+    std::function<int(struct vd_wrapper * wrapper, dt_av_frame_t * frame, AVPicture_t ** pic)> decode_frame;
+    std::function<int(struct vd_wrapper * wrapper)> release;
+	void *vd_priv;
+    void *parent;
+	
     template<typename INIT, typename DECODE, typename RELEASE>
-    video_decoder_operation(int _type, const char * _name, video_format_t _vfmt,
+    vd_wrapper(int _type, const char * _name, video_format_t _vfmt,
 	INIT _init, DECODE _decode, RELEASE _release)
        : name(_name), type(_type), vfmt(_vfmt), init(_init), decode_frame(_decode), release(_release)
 	{
 	}
 
-} dec_video_wrapper_t;
+} vd_wrapper_t;
 
 struct dtvideo_decoder
 {
     dtvideo_para_t para;
-    dec_video_wrapper_t *dec_wrapper;
+    vd_wrapper_t *wrapper;
     std::thread video_decoder_thread;
     vdec_status_t status;
     int decode_err_cnt;

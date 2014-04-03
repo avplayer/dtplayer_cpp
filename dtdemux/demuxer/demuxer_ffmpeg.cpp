@@ -387,13 +387,4 @@ static int demuxer_ffmpeg_close (demuxer_wrapper_t * wrapper)
     return 0;
 }
 
-demuxer_wrapper_t demuxer_ffmpeg = {
-    .name = "ffmpeg demuxer",
-    .id = DEMUXER_FFMPEG, 
-    .probe = demuxer_ffmpeg_probe,
-    .open = demuxer_ffmpeg_open,
-    .read_frame = demuxer_ffmpeg_read_frame,
-    .setup_info = demuxer_ffmpeg_setup_info,
-    .seek_frame = demuxer_ffmpeg_seek_frame,
-    .close = demuxer_ffmpeg_close
-};
+demuxer_wrapper_t demuxer_ffmpeg(DEMUXER_FFMPEG,"ffmpeg demuxer",demuxer_ffmpeg_probe,demuxer_ffmpeg_open,demuxer_ffmpeg_read_frame,demuxer_ffmpeg_setup_info,demuxer_ffmpeg_seek_frame,demuxer_ffmpeg_close);

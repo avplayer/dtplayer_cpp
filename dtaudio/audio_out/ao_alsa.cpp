@@ -344,15 +344,4 @@ static int ao_alsa_stop (ao_wrapper_t *wrapper)
     return 0;
 }
 
-
-ao_wrapper_t ao_alsa_ops = {
-    .id = AO_ID_ALSA,
-    .name = "alsa",
-    .ao_init = ao_alsa_init,
-    .ao_pause = ao_alsa_pause,
-    .ao_resume = ao_alsa_resume,
-    .ao_stop = ao_alsa_stop,
-    .ao_write = ao_alsa_play,
-    .ao_latency = ao_alsa_get_latency,
-    .ao_level = ao_alsa_level,
-};
+ao_wrapper_t ao_alsa_ops(AO_ID_ALSA,"alsa",ao_alsa_init,ao_alsa_pause,ao_alsa_resume,ao_alsa_stop,ao_alsa_play,ao_alsa_level,ao_alsa_get_latency);

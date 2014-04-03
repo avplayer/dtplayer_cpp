@@ -8,15 +8,15 @@
 
 #define REGISTER_VDEC(X,x)	 	\
 	{							\
-		extern dec_video_wrapper_t vdec_##x##_ops; 	\
+		extern vd_wrapper_t vdec_##x##_ops; 	\
 		register_vdec(vdec_##x##_ops); 	\
 	}
 
-static std::vector<dec_video_wrapper_t> dec_video_wrappers;
+static std::vector<vd_wrapper_t> g_vd;
 
-static void register_vdec (dec_video_wrapper_t &vdec)
+static void register_vdec (vd_wrapper_t &vdec)
 {
-	dec_video_wrappers.push_back(vdec);
+	g_vd.push_back(vdec);
     dt_info (TAG, "[%s:%d] register vdec, name:%s fmt:%d \n", __FUNCTION__, __LINE__, vdec.name, vdec.vfmt);
 }
 
@@ -31,13 +31,13 @@ void vdec_register_all ()
 
 static int select_video_decoder (dtvideo_decoder_t * decoder)
 {
-    if (dec_video_wrappers.empty())
+    if (g_vd.empty())
     {
         dt_error (TAG, "[%s:%d] select no video decoder \n", __FUNCTION__, __LINE__);
         return -1;
     }
-    decoder->dec_wrapper = & dec_video_wrappers[0];
-    dt_info (TAG, "[%s:%d] select--%s video decoder \n", __FUNCTION__, __LINE__, decoder->dec_wrapper->name);
+    decoder->wrapper = & g_vd[0];
+    dt_info (TAG, "[%s:%d] select--%s video decoder \n", __FUNCTION__, __LINE__, decoder->wrapper->name);
     return 0;
 }
 
@@ -50,7 +50,7 @@ static void *video_decode_loop (void *arg)
 {
     dt_av_frame_t frame;
     dtvideo_decoder_t *decoder = (dtvideo_decoder_t *) arg;
-    dec_video_wrapper_t *dec_wrapper = decoder->dec_wrapper;
+    vd_wrapper_t *wrapper = decoder->wrapper;
     dtvideo_context_t *vctx = (dtvideo_context_t *) decoder->parent;
     queue_t *picture_queue = vctx->vo_queue;
     /*used for decode */
@@ -103,7 +103,7 @@ static void *video_decode_loop (void *arg)
 
         /*read one frame,enter decode frame module */
         //will exec once for one time
-        ret = dec_wrapper->decode_frame (decoder, &frame, &picture);
+        ret = wrapper->decode_frame (wrapper, &frame, &picture);
         if (ret <= 0)
         {
             decoder->decode_err_cnt++;
@@ -137,17 +137,16 @@ static void *video_decode_loop (void *arg)
 
 int video_decoder_init (dtvideo_decoder_t * decoder)
 {
-    int ret = 0;
-    
+    int ret = 0;    
     /*select decoder */
     ret = select_video_decoder (decoder);
     if (ret < 0)
         return -1;
-
+	vd_wrapper_t *wrapper = decoder->wrapper;
     /*init decoder */
     decoder->pts_current = decoder->pts_first = -1;
     decoder->decoder_priv = decoder->para.avctx_priv;
-    ret = decoder->dec_wrapper->init (decoder);
+    ret = wrapper->init (wrapper,decoder);
     if (ret < 0)
         return -1;
 
@@ -186,9 +185,10 @@ void dtpicture_free (void *pic)
 int video_decoder_stop (dtvideo_decoder_t * decoder)
 {
     /*Decode thread exit */
+	vd_wrapper_t *wrapper = decoder->wrapper;
     decoder->status = VDEC_STATUS_EXIT;
 	decoder->video_decoder_thread.join();
-    decoder->dec_wrapper->release (decoder);
+    wrapper->release (wrapper);
     /*uninit buf */
     dtvideo_context_t *vctx = (dtvideo_context_t *) decoder->parent;
     //uninit_buf(&vctx->video_decoded_buf);     

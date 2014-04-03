@@ -60,58 +60,83 @@ static int select_ao_device (dtaudio_output_t * ao, int id)
     return -1;
 }
 
-int audio_output_start (dtaudio_output_t * ao)
+dtaudio_output::dtaudio_output(dtaudio_para_t& _para)
+{
+	para.channels = _para.channels;
+	para.samplerate = _para.samplerate;
+	para.dst_channels = _para.dst_channels;
+	para.dst_samplerate = _para.dst_samplerate;
+	para.data_width = _para.data_width;
+	para.bps = _para.bps;
+	para.afmt = _para.afmt;
+	
+	para.den = _para.den;
+	para.num = _para.num;
+	
+	para.extradata_size = _para.extradata_size;
+	if(_para.extradata_size > 0)
+	{
+		for(int i = 0; i < _para.extradata_size; i++)
+			para.extradata[i] = _para.extradata[i];
+	}
+	para.audio_filter = _para.audio_filter;
+	para.audio_output = _para.audio_output;
+	para.avctx_priv = _para.avctx_priv;
+}
+
+
+int dtaudio_output::audio_output_start ()
 {
     /*start playback */
-    ao->status = AO_STATUS_RUNNING;
+    this->status = AO_STATUS_RUNNING;
     return 0;
 }
 
-int audio_output_pause (dtaudio_output_t * ao)
+int dtaudio_output::audio_output_pause ()
 {
-    ao->status = AO_STATUS_PAUSE;
-    ao_wrapper_t *wrapper = ao->aout_ops;
+    this->status = AO_STATUS_PAUSE;
+    ao_wrapper_t *wrapper = this->aout_ops;
     wrapper->ao_pause (wrapper);
     return 0;
 }
 
-int audio_output_resume (dtaudio_output_t * ao)
+int dtaudio_output::audio_output_resume ()
 {
-    ao->status = AO_STATUS_RUNNING;
-    ao_wrapper_t *wrapper = ao->aout_ops;
+    this->status = AO_STATUS_RUNNING;
+    ao_wrapper_t *wrapper = this->aout_ops;
     wrapper->ao_resume (wrapper);
     return 0;
 }
 
-int audio_output_stop (dtaudio_output_t * ao)
+int dtaudio_output::audio_output_stop ()
 {
-    ao->status = AO_STATUS_EXIT;
-    ao->audio_output_thread.join();
-    ao_wrapper_t *wrapper = ao->aout_ops;
+    this->status = AO_STATUS_EXIT;
+    this->audio_output_thread.join();
+    ao_wrapper_t *wrapper = this->aout_ops;
     wrapper->ao_stop (wrapper);
     dt_info (TAG, "[%s:%d] aout stop ok \n", __FUNCTION__, __LINE__);
     return 0;
 }
 
-int audio_output_latency (dtaudio_output_t * ao)
+int dtaudio_output::audio_output_latency ()
 {
-    if (ao->status == AO_STATUS_IDLE)
+    if (this->status == AO_STATUS_IDLE)
         return 0;
-    if (ao->status == AO_STATUS_PAUSE)
-        return ao->last_valid_latency;
-    ao_wrapper_t *wrapper = ao->aout_ops;
-    ao->last_valid_latency = wrapper->ao_latency (wrapper);
-    return ao->last_valid_latency;
+    if (this->status == AO_STATUS_PAUSE)
+        return this->last_valid_latency;
+    ao_wrapper_t *wrapper = this->aout_ops;
+    this->last_valid_latency = wrapper->ao_latency (wrapper);
+    return this->last_valid_latency;
 }
 
-int audio_output_get_level (dtaudio_output_t * ao)
+int dtaudio_output::audio_output_get_level ()
 {
 
-    ao_wrapper_t *wrapper = ao->aout_ops;
+    ao_wrapper_t *wrapper = this->aout_ops;
     return wrapper->ao_level(wrapper);
 }
 
-static void *audio_output_thread (void *args)
+static void *audio_output_loop (void *args)
 {
     dtaudio_output_t *ao = (dtaudio_output_t *) args;
     ao_wrapper_t *wrapper = ao->aout_ops;
@@ -177,32 +202,32 @@ static void *audio_output_thread (void *args)
 
 }
 
-int audio_output_init (dtaudio_output_t * ao, int ao_id)
+int dtaudio_output::audio_output_init (int ao_id)
 {
     int ret = 0;
     
     /*select ao device */
-    ret = select_ao_device (ao, ao_id);
+    ret = select_ao_device (this, ao_id);
     if (ret < 0)
         return -1;
     
-    ao_wrapper_t *wrapper = ao->aout_ops;
-    wrapper->ao_init (wrapper,ao);
+    ao_wrapper_t *wrapper = this->aout_ops;
+    wrapper->ao_init (wrapper,this);
     dt_info (TAG, "[%s:%d] audio output init success\n", __FUNCTION__, __LINE__);
     
-    ao->audio_output_thread = std::thread(audio_output_thread,ao);
+    this->audio_output_thread = std::thread(audio_output_loop,this);
 	
     dt_info (TAG, "[%s:%d] create audio output thread success\n", __FUNCTION__, __LINE__);
     return ret;
 }
 
-int64_t audio_output_get_latency (dtaudio_output_t * ao)
+int64_t dtaudio_output::audio_output_get_latency ()
 {
-    if (ao->status == AO_STATUS_IDLE)
+    if (this->status == AO_STATUS_IDLE)
         return 0;
-    if (ao->status == AO_STATUS_PAUSE)
-        return ao->last_valid_latency;
-    ao_wrapper_t *wrapper = ao->aout_ops;
-    ao->last_valid_latency = wrapper->ao_latency (wrapper);
-    return ao->last_valid_latency;
+    if (this->status == AO_STATUS_PAUSE)
+        return this->last_valid_latency;
+    ao_wrapper_t *wrapper = this->aout_ops;
+    this->last_valid_latency = wrapper->ao_latency (wrapper);
+    return this->last_valid_latency;
 }

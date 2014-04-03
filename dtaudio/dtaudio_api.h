@@ -25,7 +25,6 @@ int dtaudio_start (void *audio_priv);
 int dtaudio_pause (void *audio_priv);
 int dtaudio_resume (void *audio_priv);
 int dtaudio_stop (void *audio_priv);
-int dtaudio_release (void *audio_priv);
 int64_t dtaudio_get_pts (void *audio_priv);
 int dtaudio_drop (void *audio_priv, int64_t target_pts);
 int64_t dtaudio_get_first_pts (void *audio_priv);

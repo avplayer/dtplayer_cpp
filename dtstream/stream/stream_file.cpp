@@ -77,11 +77,4 @@ static int stream_file_close (stream_wrapper_t * wrapper)
     return 0;
 }
 
-stream_wrapper_t stream_file = {
-    .name = "File",
-    .id = STREAM_FILE,
-    .open = stream_file_open,
-    .read = stream_file_read,
-    .seek = stream_file_seek,
-    .close = stream_file_close,
-};
+stream_wrapper_t stream_file(STREAM_FILE, "File", stream_file_open, stream_file_read, stream_file_seek, stream_file_close);

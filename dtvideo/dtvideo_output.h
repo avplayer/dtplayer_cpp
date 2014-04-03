@@ -12,16 +12,25 @@
 
 typedef struct dtvideo_output dtvideo_output_t;
 
-typedef struct _vo_t
+typedef struct vo_wrapper
 {
     int id;
     const char *name;
-
-    int (*vo_init) (dtvideo_output_t * ao);
-    int (*vo_stop) (dtvideo_output_t * ao);
-    int (*vo_render) (dtvideo_output_t * ao, AVPicture_t * pic);
+	
+	std::function<int(struct vo_wrapper * wrapper, void *parent)> vo_init;
+	std::function<int(struct vo_wrapper * wrapper)> vo_stop;
+	std::function<int(struct vo_wrapper * wrapper, AVPicture_t * pic)> vo_render;
     void *handle;
-} vo_operations_t;
+	void *parent;
+	
+    template<typename INIT, typename RENDER, typename STOP>
+    vo_wrapper(int _id, const char * _name,
+	INIT _init, RENDER _render, STOP _stop)
+       : name(_name), id(_id), vo_init(_init), vo_render(_render), vo_stop(_stop)
+	{
+	}
+	
+} vo_wrapper_t;
 
 typedef enum
 {
@@ -52,7 +61,7 @@ struct dtvideo_output
 {
     /*param */
     dtvideo_para_t para;
-    vo_operations_t *vout_ops;
+    vo_wrapper_t *wrapper;
     vo_status_t status;
     std::thread video_output_thread;
     vo_state_t state;

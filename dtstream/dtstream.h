@@ -26,14 +26,22 @@ typedef struct stream_wrapper
 {
     const char *name;
     int id;
-    int (*open) (struct stream_wrapper * wrapper,char *stream_name);
-    int (*read) (struct stream_wrapper * wrapper, uint8_t *buf,int len);
-    int (*seek) (struct stream_wrapper * wrapper, int64_t pos, int whence);
-    int (*close) (struct stream_wrapper * wrapper);
+	
+	std::function<int (struct stream_wrapper * wrapper, char *stream_name)>open;
+	std::function<int (struct stream_wrapper * wrapper, uint8_t *buf,int len)>read;
+	std::function<int (struct stream_wrapper * wrapper, int64_t pos, int whence)>seek;
+	std::function<int (struct stream_wrapper * wrapper)>close;
+	
     void *stream_priv;          // point to priv context
     void *parent;               // point to parent, dtstream_context_t
     stream_ctrl_t info;
     struct stream_wrapper *next;
+	
+	template<typename OPEN, typename READ, typename SEEK, typename CLOSE>
+	stream_wrapper(int _id, const char *_name, OPEN _open, READ _read, SEEK _seek, CLOSE _close)
+	              :id(_id), name(_name), open(_open), read(_read), seek(_seek), close(_close)
+	{}
+	
 } stream_wrapper_t;
 
 typedef struct

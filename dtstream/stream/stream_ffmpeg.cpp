@@ -71,12 +71,4 @@ static int stream_ffmpeg_close (stream_wrapper_t * wrapper)
     wrapper->stream_priv = NULL;
     return 0;
 }
-
-stream_wrapper_t stream_ffmpeg = {
-    .name = "FFMPEG STREAM",
-    .id = STREAM_FFMPEG,
-    .open = stream_ffmpeg_open,
-    .read = stream_ffmpeg_read,
-    .seek = stream_ffmpeg_seek,
-    .close = stream_ffmpeg_close,
-};
+stream_wrapper_t stream_ffmpeg(STREAM_FFMPEG, "FFMPEG STREAM", stream_ffmpeg_open, stream_ffmpeg_read, stream_ffmpeg_seek, stream_ffmpeg_close);

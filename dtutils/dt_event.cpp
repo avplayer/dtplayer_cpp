@@ -53,7 +53,7 @@ int dt_event_server_init ()
     }
 
 	server_mgt.transport_loop_thread = std::thread(event_transport_loop,nullptr);
-    dt_info (TAG, "TRANSTROP LOOP CREATE OK, TID:%d \n", tid);
+    dt_info (TAG, "TRANSTROP LOOP CREATE OK \n");
     return 0;
 }
 
@@ -153,12 +153,13 @@ int dt_remove_server (event_server_t * server)
     int count = server->event_count;
 
     dt_info (TAG, "REMOVE %s \n", server->name);
-    /*remove all events */
-    event_t *event = server->event;
-    event_t *event_next = event->next;
-
-    if (count == 0)
+    /*remove all events */ 
+    event_t *event = nullptr;
+    event_t *event_next = nullptr;
+	if (count == 0)
         goto REMOVE_SERVICE;
+	event = server->event;
+    event_next = event->next;
 
     while (event)
     {

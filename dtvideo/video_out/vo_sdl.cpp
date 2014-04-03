@@ -11,10 +11,11 @@ static SDL_Overlay *overlay = NULL;
 static int dx, dy, dw, dh, ww, wh;
 static dt_lock_t vo_mutex;
 
-static int vo_sdl_init (dtvideo_output_t * vo)
+static int vo_sdl_init (vo_wrapper_t *wrapper, void *parent)
 {
     int flags;
-
+	wrapper->parent = parent;
+	dtvideo_output_t *vo = (dtvideo_output_t *)parent;
     putenv ("SDL_VIDEO_WINDOW_POS=center");
     putenv ("SDL_VIDEO_CENTERED=1");
 
@@ -53,7 +54,7 @@ static int vo_sdl_init (dtvideo_output_t * vo)
     return 0;
 }
 
-static int vo_sdl_stop (dtvideo_output_t * vo)
+static int vo_sdl_stop (vo_wrapper_t *wrapper)
 {
     dt_lock (&vo_mutex);
 
@@ -66,7 +67,7 @@ static int vo_sdl_stop (dtvideo_output_t * vo)
     return 0;
 }
 
-static int vo_sdl_render (dtvideo_output_t * vo, AVPicture_t * pict)
+static int vo_sdl_render (vo_wrapper_t *wrapper, AVPicture_t * pict)
 {
     dt_lock (&vo_mutex);
 
@@ -88,10 +89,4 @@ static int vo_sdl_render (dtvideo_output_t * vo, AVPicture_t * pict)
     return 0;
 }
 
-vo_operations_t vo_sdl_ops = {
-    .id = VO_ID_SDL,
-    .name = "sdl",
-    .vo_init = vo_sdl_init,
-    .vo_stop = vo_sdl_stop,
-    .vo_render = vo_sdl_render,
-};
+vo_wrapper_t vo_sdl_ops(VO_ID_SDL,"sdl",vo_sdl_init,vo_sdl_render,vo_sdl_stop);

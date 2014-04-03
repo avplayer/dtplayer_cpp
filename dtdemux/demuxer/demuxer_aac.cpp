@@ -401,13 +401,4 @@ static int demuxer_aac_close(demuxer_wrapper_t *wrapper)
 	return 0;
 }
 
-demuxer_wrapper_t demuxer_aac = {
-    .name = "aac demuxer",
-    .id = DEMUXER_AAC, 
-    .probe = demuxer_aac_probe,
-    .open = demuxer_aac_open,
-    .read_frame = demuxer_aac_read_frame,
-    .setup_info = demuxer_aac_setup_info,
-    .seek_frame = demuxer_aac_seek_frame,
-    .close = demuxer_aac_close
-};
+demuxer_wrapper_t demuxer_aac(DEMUXER_AAC,"aac demuxer",demuxer_aac_probe,demuxer_aac_open,demuxer_aac_read_frame,demuxer_aac_setup_info,demuxer_aac_seek_frame,demuxer_aac_close);

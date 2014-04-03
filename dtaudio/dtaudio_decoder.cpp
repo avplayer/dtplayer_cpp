@@ -55,15 +55,6 @@ static int select_audio_decoder (dtaudio_decoder_t * decoder)
     return 0;
 }
 
-/*Just for pcm test case*/
-int transport_direct (char *inbuf, int *inlen, char *outbuf, int *outlen)
-{
-    int ret = *inlen;
-    memcpy (outbuf, inbuf, *inlen);
-    *outlen = *inlen;
-    return ret;
-}
-
 static int64_t pts_exchange (dtaudio_decoder_t * decoder, int64_t pts)
 {
     return pts;
@@ -264,12 +255,36 @@ static void *audio_decode_loop (void *arg)
     return NULL;
 }
 
-int audio_decoder_init (dtaudio_decoder_t * decoder)
+dtaudio_decoder::dtaudio_decoder(dtaudio_para_t& para)
+{
+	aparam.channels = para.channels;
+	aparam.samplerate = para.samplerate;
+	aparam.dst_channels = para.dst_channels;
+	aparam.dst_samplerate = para.dst_samplerate;
+	aparam.data_width = para.data_width;
+	aparam.bps = para.bps;
+	aparam.afmt = para.afmt;
+	
+	aparam.den = para.den;
+	aparam.num = para.num;
+	
+	aparam.extradata_size = para.extradata_size;
+	if(para.extradata_size > 0)
+	{
+		for(int i = 0; i < para.extradata_size; i++)
+			aparam.extradata[i] = para.extradata[i];
+	}
+	aparam.audio_filter = para.audio_filter;
+	aparam.audio_output = para.audio_output;
+	aparam.avctx_priv = para.avctx_priv;
+}
+
+int dtaudio_decoder::audio_decoder_init ()
 {
 	dec_audio_wrapper_t *wrapper;
 	dtaudio_context_t *actx;
 	int size;
-
+	dtaudio_decoder_t * decoder = this;
     int ret = 0;
     /*select decoder */
     ret = select_audio_decoder (decoder);
@@ -305,7 +320,7 @@ int audio_decoder_init (dtaudio_decoder_t * decoder)
     }
 
     decoder->audio_decoder_thread = std::thread(audio_decode_loop,decoder);	
-    audio_decoder_start (decoder);
+	decoder->audio_decoder_start();
     return ret;
   ERR2:
     buf_release (&actx->audio_decoded_buf);
@@ -315,28 +330,29 @@ int audio_decoder_init (dtaudio_decoder_t * decoder)
     return ret;
 }
 
-int audio_decoder_start (dtaudio_decoder_t * decoder)
+int dtaudio_decoder::audio_decoder_start ()
 {
-    decoder->status = ADEC_STATUS_RUNNING;
+    this->status = ADEC_STATUS_RUNNING;
     return 0;
 }
 
-int audio_decoder_stop (dtaudio_decoder_t * decoder)
+int dtaudio_decoder::audio_decoder_stop ()
 {
-    dec_audio_wrapper_t *wrapper = decoder->dec_wrapper;
+    dec_audio_wrapper_t *wrapper = this->dec_wrapper;
     /*Decode thread exit */
-    decoder->status = ADEC_STATUS_EXIT;
-	decoder->audio_decoder_thread.join();
+    this->status = ADEC_STATUS_EXIT;
+	this->audio_decoder_thread.join();
     wrapper->release (wrapper);
     /*uninit buf */
-    dtaudio_context_t *actx = (dtaudio_context_t *) decoder->parent;
+    dtaudio_context_t *actx = (dtaudio_context_t *) this->parent;
     buf_release (&actx->audio_decoded_buf);
+	dt_info(TAG,"ad stop ok\n");
     return 0;
 }
 
 //====status & pts 
 #define DTAUDIO_PTS_FREQ    90000
-int64_t audio_decoder_get_pts (dtaudio_decoder_t * decoder)
+int64_t dtaudio_decoder::audio_decoder_get_pts ()
 {
     int64_t pts, delay_pts;
     int frame_num;
@@ -344,36 +360,36 @@ int64_t audio_decoder_get_pts (dtaudio_decoder_t * decoder)
 
     int len;
     float pts_ratio;
-    dtaudio_context_t *actx = (dtaudio_context_t *) decoder->parent;
+    dtaudio_context_t *actx = (dtaudio_context_t *) this->parent;
     dt_buffer_t *out = &actx->audio_decoded_buf;
 
-    if (decoder->status == ADEC_STATUS_IDLE || decoder->status == ADEC_STATUS_EXIT)
+    if (this->status == ADEC_STATUS_IDLE || this->status == ADEC_STATUS_EXIT)
         return -1;
-    channels = decoder->aparam.dst_channels;
-    sample_rate = decoder->aparam.samplerate;
-    bps = decoder->aparam.bps;
+    channels = this->aparam.dst_channels;
+    sample_rate = this->aparam.samplerate;
+    bps = this->aparam.bps;
     pts_ratio = (float) DTAUDIO_PTS_FREQ / sample_rate;
     pts = 0;
-    if (-1 == decoder->pts_first)
+    if (-1 == this->pts_first)
         return -1;
-    if (-1 == decoder->pts_current) //case 1 current_pts valid
+    if (-1 == this->pts_current) //case 1 current_pts valid
     {
-        //if(decoder->pts_last_valid)
-        //    pts=decoder->pts_last_valid;
-        //len = decoder->pts_cache_size + decoder->pts_buffer_size - out->level;
-        len = decoder->pts_buffer_size;
+        //if(this->pts_last_valid)
+        //    pts=this->pts_last_valid;
+        //len = this->pts_cache_size + this->pts_buffer_size - out->level;
+        len = this->pts_buffer_size;
         frame_num = (len) / (bps * channels / 8);
         pts += (frame_num) * pts_ratio;
-        pts += decoder->pts_first;
-        dt_debug (TAG, "[%s:%d] first_pts:%llu pts:%llu pts_s:%d frame_num:%d len:%d pts_ratio:%5.1f\n", __FUNCTION__, __LINE__, decoder->pts_first, pts, pts / 90000, frame_num, len, pts_ratio);
+        pts += this->pts_first;
+        dt_debug (TAG, "[%s:%d] first_pts:%llu pts:%llu pts_s:%d frame_num:%d len:%d pts_ratio:%5.1f\n", __FUNCTION__, __LINE__, this->pts_first, pts, pts / 90000, frame_num, len, pts_ratio);
         return pts;
     }
     //case 2 current_pts invalid,calc pts mentally
-    pts = decoder->pts_current;
-    len = decoder->pts_buffer_size - out->level - decoder->pts_cache_size;
+    pts = this->pts_current;
+    len = this->pts_buffer_size - out->level - this->pts_cache_size;
     frame_num = (len) / (bps * channels / 8);
     delay_pts = (frame_num) * pts_ratio;
-    dt_debug (TAG, "[%s:%d] current_pts:%lld delay_pts:%lld  pts_s:%lld frame_num:%d pts_ratio:%f\n", __FUNCTION__, __LINE__, decoder->pts_current, delay_pts, pts / 90000, frame_num, pts_ratio);
+    dt_debug (TAG, "[%s:%d] current_pts:%lld delay_pts:%lld  pts_s:%lld frame_num:%d pts_ratio:%f\n", __FUNCTION__, __LINE__, this->pts_current, delay_pts, pts / 90000, frame_num, pts_ratio);
     pts += delay_pts;
     if (pts < 0)
         pts = 0;

@@ -31,16 +31,10 @@ static int audio_server_release (dtaudio_context_t * actx)
 int dtaudio_init (void **audio_priv, dtaudio_para_t * para, void *parent)
 {
     int ret = 0;
-    dtaudio_context_t *actx = (dtaudio_context_t *) malloc (sizeof (dtaudio_context_t));
-    if (!actx)
-    {
-        dt_error (TAG, "[%s:%d] dtaudio_init failed \n", __FUNCTION__, __LINE__);
-        return -1;
-    }
-    memset (actx, 0, sizeof (dtaudio_context_t));
-    memcpy (&actx->audio_param, para, sizeof (dtaudio_para_t));
-    actx->audio_param.extradata_size = para->extradata_size;
-    memcpy (&(actx->audio_param.extradata[0]), &(para->extradata[0]), para->extradata_size);
+	
+	dtaudio_para_t &apara = *para;
+	dtaudio_context_t *actx = new dtaudio_context(apara);
+
     /*init server */
     ret = audio_server_init (actx);
     if (ret < 0)
@@ -50,7 +44,7 @@ int dtaudio_init (void **audio_priv, dtaudio_para_t * para, void *parent)
     }
     //we need to set parent early, Since enter audio decoder loop first,will crash for parent invalid
     actx->parent = parent;
-    ret = audio_init (actx);
+    ret = actx->audio_init();
     if (ret < 0)
     {
         dt_error ("[%s:%d] audio_init failed \n", __FUNCTION__, __LINE__);
@@ -58,6 +52,7 @@ int dtaudio_init (void **audio_priv, dtaudio_para_t * para, void *parent)
     }
 
     *audio_priv = (void *) actx;
+
     return ret;
 }
 
@@ -109,58 +104,36 @@ int dtaudio_stop (void *audio_priv)
     actx->event_loop_thread.join();
 
     audio_server_release (actx);
-    free (audio_priv);
+    delete(actx);
     audio_priv = NULL;
 
     return ret;
-}
-
-int dtaudio_release (void *audio_priv)
-{
-
-    return 0;
-    int ret;
-    dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
-
-    event_t *event = dt_alloc_event ();
-    event->next = NULL;
-    event->server_id = EVENT_SERVER_AUDIO;
-    event->type = AUDIO_EVENT_RELEASE;
-    dt_send_event (event);
-
-    actx->event_loop_thread.join();
-
-    audio_server_release (actx);
-    free (audio_priv);
-    audio_priv = NULL;
-    return ret;
-
 }
 
 //==Part2:PTS&STATUS Relative
 int64_t dtaudio_get_pts (void *audio_priv)
 {
     dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
-    return audio_get_current_pts (actx);
+	return actx->audio_get_first_pts();
 }
 
 int dtaudio_drop (void *audio_priv, int64_t target_pts)
 {
     dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
-    return audio_drop (actx, target_pts);
+    return actx->audio_drop(target_pts);
 }
 
 int64_t dtaudio_get_first_pts (void *audio_priv)
 {
     dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
-    return audio_get_first_pts (actx);
+	return actx->audio_get_first_pts();
 }
 
 int dtaudio_get_state (void *audio_priv, dec_state_t * dec_state)
 {
     int ret;
     dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
-    ret = audio_get_dec_state (actx, dec_state);
+	ret = actx->audio_get_dec_state(dec_state);
     return ret;
 }
 
@@ -168,6 +141,6 @@ int dtaudio_get_out_closed (void *audio_priv)
 {
     int ret;
     dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
-    ret = audio_get_out_closed (actx);
+	ret = actx->audio_get_out_closed();
     return ret;
 }

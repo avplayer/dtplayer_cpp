@@ -18,17 +18,24 @@ typedef struct ao_wrapper
 {
     int id;
     const char *name;
-
-    int (*ao_init) (struct ao_wrapper * wrapper, void *parent);
-    int (*ao_pause) (struct ao_wrapper * wrapper);
-    int (*ao_resume) (struct ao_wrapper * wrapper);
-    int (*ao_stop) (struct ao_wrapper *wrapper);
-    int (*ao_write) (struct ao_wrapper *wrapper, uint8_t * buf, int size);
-    int (*ao_level) (struct ao_wrapper *wrapper);
-    int64_t (*ao_latency) (struct ao_wrapper *wrapper);
-
+	
+	std::function<int (struct ao_wrapper * wrapper, void *parent)> ao_init;
+	std::function<int (struct ao_wrapper * wrapper)> ao_pause;
+	std::function<int (struct ao_wrapper * wrapper)> ao_resume;
+	std::function<int (struct ao_wrapper * wrapper)> ao_stop;
+	std::function<int (struct ao_wrapper *wrapper, uint8_t * buf, int size)> ao_write;
+	std::function<int (struct ao_wrapper *wrapper)> ao_level;
+	std::function<int (struct ao_wrapper *wrapper)> ao_latency;
+    
     void *ao_priv;
     void *parent;
+
+    template<typename INIT, typename PAUSE, typename RESUME, typename STOP, typename WRITE, typename LEVEL, typename LATENCY>
+    ao_wrapper(int _id, const char * _name,
+		INIT _init, PAUSE _pause, RESUME _resume, STOP _stop, WRITE _write, LEVEL _level, LATENCY _latency)
+		  : name(_name), id(_id), ao_init(_init), ao_pause(_pause), ao_resume(_resume), ao_stop(_stop), ao_write(_write), ao_level(_level), ao_latency(_latency)
+	{
+	}    
 } ao_wrapper_t;
 
 #define dtao_format_t ao_id_t
@@ -67,18 +74,22 @@ typedef struct dtaudio_output
 
     uint64_t last_valid_latency;
     void *parent;               //point to dtaudio_t, can used for param of pcm get interface
+    
+    dtaudio_output(dtaudio_para_t &para);
+	int audio_output_init (int ao_id);
+	int audio_output_release ();
+	int audio_output_stop ();
+	int audio_output_resume ();
+	int audio_output_pause ();
+	int audio_output_start ();
+
+	int audio_output_latency ();
+	int64_t audio_output_get_latency ();
+	int audio_output_get_level ();
+    
 }dtaudio_output_t;
 
 void aout_register_all();
-int audio_output_init (dtaudio_output_t * ao, int ao_id);
-int audio_output_release (dtaudio_output_t * ao);
-int audio_output_stop (dtaudio_output_t * ao);
-int audio_output_resume (dtaudio_output_t * ao);
-int audio_output_pause (dtaudio_output_t * ao);
-int audio_output_start (dtaudio_output_t * ao);
 
-int audio_output_latency (dtaudio_output_t * ao);
-int64_t audio_output_get_latency (dtaudio_output_t * ao);
-int audio_output_get_level (dtaudio_output_t * ao);
 
 #endif

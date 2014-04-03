@@ -3,7 +3,61 @@
 
 #define TAG "AUDIO"
 
-//==Part1:Data IO Relative
+void audio_register_all()
+{
+    adec_register_all();
+    aout_register_all();
+}
+
+/*ao read pcm from decoder buf*/
+int audio_output_read (void *priv, uint8_t * buf, int size)
+{
+    dtaudio_context_t *actx = (dtaudio_context_t *) priv;
+    return buf_get (&actx->audio_decoded_buf, buf, size);
+}
+
+//calc cur pts
+int64_t dtaudio_context::audio_get_current_pts ()
+{
+    int64_t pts, delay_pts;
+	dtaudio_context_t * actx = this;
+    if (actx->audio_state < AUDIO_STATUS_INITED)
+        return -1;
+	pts = this->audio_dec->audio_decoder_get_pts();
+    if (pts == -1)
+        return -1;
+	delay_pts = this->audio_out->audio_output_get_latency();
+    if (delay_pts == -1)
+        delay_pts = 0;
+    if (delay_pts < pts)
+        pts -= delay_pts;
+    else
+        pts = 0;
+    return pts;
+}
+
+/*$ update dtcore audio pts*/
+void audio_update_pts (void *priv)
+{
+    int64_t pts, delay_pts;
+    dtaudio_context_t *actx = (dtaudio_context_t *) priv;
+    if (actx->audio_state < AUDIO_STATUS_INITED)
+        return;
+	pts = actx->audio_dec->audio_decoder_get_pts();
+    if (pts == -1)
+        return;
+	delay_pts = actx->audio_out->audio_output_get_latency();
+    if (delay_pts == -1)
+        delay_pts = 0;
+    dt_debug (TAG, "[%s:%d] pts:%lld  delay:%lld  qactual:%lld time:%d \n", __FUNCTION__, __LINE__, pts, delay_pts, pts - delay_pts, (pts - delay_pts) / 90000);
+    if (delay_pts < pts)
+        pts -= delay_pts;
+    else
+        pts = 0;
+    dthost_update_apts (actx->parent, pts);
+    return;
+}
+
 /*read frame from dtport*/
 int audio_read_frame (void *priv, dt_av_frame_t * frame)
 {
@@ -14,47 +68,42 @@ int audio_read_frame (void *priv, dt_av_frame_t * frame)
     return ret;
 }
 
-int audio_filter_read ()
+dtaudio_context::dtaudio_context(dtaudio_para_t &para)
 {
-    return 0;
+	audio_param.channels = para.channels;
+	audio_param.samplerate = para.samplerate;
+	audio_param.dst_channels = para.dst_channels;
+	audio_param.dst_samplerate = para.dst_samplerate;
+	audio_param.data_width = para.data_width;
+	audio_param.bps = para.bps;
+	audio_param.afmt = para.afmt;
+	
+	audio_param.den = para.den;
+	audio_param.num = para.num;
+	
+	audio_param.extradata_size = para.extradata_size;
+	if(para.extradata_size > 0)
+	{
+		for(int i = 0; i < para.extradata_size; i++)
+			audio_param.extradata[i] = para.extradata[i];
+	}
+	audio_param.audio_filter = para.audio_filter;
+	audio_param.audio_output = para.audio_output;
+	audio_param.avctx_priv = para.avctx_priv;
+
 }
 
-/*ao read pcm from decoder buf*/
-int audio_output_read (void *priv, uint8_t * buf, int size)
+int64_t dtaudio_context::audio_get_first_pts ()
 {
-    dtaudio_context_t *actx = (dtaudio_context_t *) priv;
-    return buf_get (&actx->audio_decoded_buf, buf, size);
-}
-
-//==Part2: PTS&STATUS Relative
-int64_t audio_get_current_pts (dtaudio_context_t * actx)
-{
-    int64_t pts, delay_pts;
-    if (actx->audio_state < AUDIO_STATUS_INITED)
+    if (this->audio_state != AUDIO_STATUS_INITED)
         return -1;
-    pts = audio_decoder_get_pts (&actx->audio_dec);
-    if (pts == -1)
-        return -1;
-    delay_pts = audio_output_get_latency (&actx->audio_out);
-    if (delay_pts == -1)
-        delay_pts = 0;
-    if (delay_pts < pts)
-        pts -= delay_pts;
-    else
-        pts = 0;
-    return pts;
+    return this->audio_dec->pts_first;
 }
 
-int64_t audio_get_first_pts (dtaudio_context_t * actx)
+int dtaudio_context::audio_drop (int64_t target_pts)
 {
-    if (actx->audio_state != AUDIO_STATUS_INITED)
-        return -1;
-    return actx->audio_dec.pts_first;
-}
-
-int audio_drop (dtaudio_context_t * actx, int64_t target_pts)
-{
-    int64_t diff = target_pts - audio_get_first_pts (actx);
+	dtaudio_context_t * actx = this;
+    int64_t diff = target_pts - actx->audio_get_first_pts();
 
     int diff_time = diff / 90;
     if (diff_time > AV_DROP_THRESHOLD)
@@ -86,7 +135,7 @@ int audio_drop (dtaudio_context_t * actx, int64_t target_pts)
         drop_count = 50;
         size -= rlen;
         /*calc pts every time, for interrupt */
-        pts = audio_get_current_pts (actx);
+        pts = actx->audio_get_current_pts();
         if (pts >= target_pts)
             break;
         dt_debug (TAG, "read :%d pcm left:%d pts:%lld \n", rlen, size, pts);
@@ -96,33 +145,12 @@ int audio_drop (dtaudio_context_t * actx, int64_t target_pts)
     return 0;
 }
 
-/*$ update dtcore audio pts*/
-void audio_update_pts (void *priv)
+int dtaudio_context::audio_get_dec_state (dec_state_t * dec_state)
 {
-    int64_t pts, delay_pts;
-    dtaudio_context_t *actx = (dtaudio_context_t *) priv;
-    if (actx->audio_state < AUDIO_STATUS_INITED)
-        return;
-    pts = audio_decoder_get_pts (&actx->audio_dec);
-    if (pts == -1)
-        return;
-    delay_pts = audio_output_get_latency (&actx->audio_out);
-    if (delay_pts == -1)
-        delay_pts = 0;
-    dt_debug (TAG, "[%s:%d] pts:%lld  delay:%lld  actual:%lld time:%d \n", __FUNCTION__, __LINE__, pts, delay_pts, pts - delay_pts, (pts - delay_pts) / 90000);
-    if (delay_pts < pts)
-        pts -= delay_pts;
-    else
-        pts = 0;
-    dthost_update_apts (actx->parent, pts);
-    return;
-}
-
-int audio_get_dec_state (dtaudio_context_t * actx, dec_state_t * dec_state)
-{
+	dtaudio_context_t * actx = this;
     if (actx->audio_state <= AUDIO_STATUS_INITED)
         return -1;
-    dtaudio_decoder_t *adec = &actx->audio_dec;
+    dtaudio_decoder_t *adec = actx->audio_dec;
     dec_state->adec_channels = adec->aparam.channels;
     dec_state->adec_error_count = adec->decode_err_cnt;
     dec_state->adec_bps = adec->aparam.bps;
@@ -132,14 +160,15 @@ int audio_get_dec_state (dtaudio_context_t * actx, dec_state_t * dec_state)
 }
 
 //lower than 50ms, return true
-int audio_get_out_closed (dtaudio_context_t * actx)
+int dtaudio_context::audio_get_out_closed ()
 {
+	dtaudio_context_t * actx = this;
     if (actx->audio_state <= AUDIO_STATUS_INITED)
         return 0;
     int default_level;
     int decoder_level, output_level, total;
     //get output buffer level
-    output_level = audio_output_get_level (&actx->audio_out);
+	output_level = actx->audio_out->audio_output_get_level();
     //get decoder buffer level
     decoder_level = actx->audio_decoded_buf.level;
     total = decoder_level + output_level;
@@ -153,19 +182,13 @@ int audio_get_out_closed (dtaudio_context_t * actx)
     return 0;
 }
 
-//==Part3:Control
-void audio_register_all()
+int dtaudio_context::audio_start ()
 {
-    adec_register_all();
-    aout_register_all();
-}
-
-int audio_start (dtaudio_context_t * actx)
-{
+	dtaudio_context_t * actx = this;
     if (actx->audio_state == AUDIO_STATUS_INITED)
     {
-        dtaudio_output_t *audio_out = &actx->audio_out;
-        audio_output_start (audio_out);
+        dtaudio_output_t *audio_out = actx->audio_out;
+		audio_out->audio_output_start();
         actx->audio_state = AUDIO_STATUS_ACTIVE;
         return 0;
     }
@@ -173,38 +196,39 @@ int audio_start (dtaudio_context_t * actx)
     return -1;
 }
 
-int audio_pause (dtaudio_context_t * actx)
+int dtaudio_context::audio_pause ()
 {
+	dtaudio_context_t * actx = this;
     if (actx->audio_state == AUDIO_STATUS_ACTIVE)
     {
-        dtaudio_output_t *audio_out = &actx->audio_out;
-        audio_output_pause (audio_out);
+        dtaudio_output_t *audio_out = actx->audio_out;
+		audio_out->audio_output_pause();
         actx->audio_state = AUDIO_STATUS_PAUSED;
     }
     return 0;
 }
 
-int audio_resume (dtaudio_context_t * actx)
+int dtaudio_context::audio_resume ()
 {
+	dtaudio_context_t * actx = this;
     if (actx->audio_state == AUDIO_STATUS_PAUSED)
     {
-        dtaudio_output_t *audio_out = &actx->audio_out;
-        audio_output_resume (audio_out);
+        dtaudio_output_t *audio_out = actx->audio_out;
+		audio_out->audio_output_resume();
         actx->audio_state = AUDIO_STATUS_ACTIVE;
     }
     return 0;
 }
 
-int audio_stop (dtaudio_context_t * actx)
+int dtaudio_context::audio_stop ()
 {
+	dtaudio_context_t * actx = this;
     if (actx->audio_state > AUDIO_STATUS_INITED)
     {
-        dtaudio_output_t *audio_out = &actx->audio_out;
-        audio_output_stop (audio_out);
-        dtaudio_filter_t *audio_filter = &actx->audio_filt;
-        audio_filter_stop (audio_filter);
-        dtaudio_decoder_t *audio_decoder = &actx->audio_dec;
-        audio_decoder_stop (audio_decoder);
+        dtaudio_output_t *audio_out = actx->audio_out;
+		audio_out->audio_output_stop();
+        dtaudio_decoder_t *audio_decoder = actx->audio_dec;
+		audio_decoder->audio_decoder_stop();
         actx->audio_state = AUDIO_STATUS_STOP;
     }
     return 0;
@@ -235,25 +259,25 @@ static void *event_handle_loop (void *args)
         case AUDIO_EVENT_START:
 
             dt_info (DTAUDIO_LOG_TAG, "Receive START Command!\n");
-            audio_start (actx);
+			actx->audio_start();
             break;
 
         case AUDIO_EVENT_PAUSE:
 
             dt_info (DTAUDIO_LOG_TAG, "Receive PAUSE Command!\n");
-            audio_pause (actx);
+			actx->audio_pause();
             break;
 
         case AUDIO_EVENT_RESUME:
-
+			
             dt_info (DTAUDIO_LOG_TAG, "Receive RESUME Command!\n");
-            audio_resume (actx);
+			actx->audio_resume();
             break;
 
         case AUDIO_EVENT_STOP:
 
             dt_info (DTAUDIO_LOG_TAG, "Receive STOP Command!\n");
-            audio_stop (actx);
+			actx->audio_stop();
             break;
 
         case AUDIO_EVENT_MUTE:
@@ -280,36 +304,28 @@ static void *event_handle_loop (void *args)
 
 }
 
-int audio_init (dtaudio_context_t * actx)
+int dtaudio_context::audio_init ()
 {
     int ret = 0;
     dt_info (DTAUDIO_LOG_TAG, "[%s:%d] audio init start\n", __FUNCTION__, __LINE__);
-
+	dtaudio_context_t * actx = this;
     actx->audio_state = AUDIO_STATUS_INITING;
-    dtaudio_decoder_t *audio_dec = &actx->audio_dec;
-    dtaudio_filter_t *audio_filter = &actx->audio_filt;
-    dtaudio_output_t *audio_out = &actx->audio_out;
+	dtaudio_decoder_t *audio_dec = nullptr;
+	dtaudio_output_t *audio_out = nullptr;
 
-    /*audio decoder init */
-    memset (audio_dec, 0, sizeof (dtaudio_decoder_t));
-    memset (&audio_dec->aparam, 0, sizeof (dtaudio_para_t));
-    memcpy (&audio_dec->aparam, &actx->audio_param, sizeof (dtaudio_para_t));
+	dtaudio_para_t &para = actx->audio_param;
+	actx->audio_dec = new dtaudio_decoder(para);
+	audio_dec = actx->audio_dec;
     audio_dec->parent = actx;
-    ret = audio_decoder_init (audio_dec);
+
+	ret = audio_dec->audio_decoder_init();
     if (ret < 0)
         goto err1;
 
-    /*audio filter decoder */
-    memset (audio_filter, 0, sizeof (dtaudio_filter_t));
-    ret = audio_filter_init (audio_filter);
-    if (ret < 0)
-        goto err2;
-
-    /*audio output decoder */
-    memset (audio_out, 0, sizeof (dtaudio_output_t));
-    memcpy (&(audio_out->para), &(actx->audio_param), sizeof (audio_out->para));
+	actx->audio_out = new dtaudio_output(para);
+	audio_out = actx->audio_out;
     audio_out->parent = actx;
-    ret = audio_output_init (audio_out, actx->audio_param.audio_output);
+	ret = audio_out->audio_output_init(para.audio_output);
     if (ret < 0)
         goto err3;
 
@@ -321,12 +337,11 @@ int audio_init (dtaudio_context_t * actx)
     dt_info (DTAUDIO_LOG_TAG, "[%s:%d]audio decoder init failed \n", __FUNCTION__, __LINE__);
     return -1;
   err2:
-    audio_decoder_stop (audio_dec);
+	audio_dec->audio_decoder_stop();
     dt_info (DTAUDIO_LOG_TAG, "[%s:%d]audio filter init failed \n", __FUNCTION__, __LINE__);
     return -2;
   err3:
-    audio_decoder_stop (audio_dec);
-    audio_filter_stop (audio_filter);
+	audio_dec->audio_decoder_stop();
     dt_info (DTAUDIO_LOG_TAG, "[%s:%d]audio output init failed \n", __FUNCTION__, __LINE__);
     return -3;
 
