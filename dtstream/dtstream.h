@@ -2,6 +2,7 @@
 #define DTSTREAM_H
 
 #include "dt_av.h"
+#include "dtstream_api.h"
 
 #include <stdio.h>
 #include <stddef.h>
@@ -44,20 +45,24 @@ typedef struct stream_wrapper
 	
 } stream_wrapper_t;
 
-typedef struct
+typedef struct dtstream_context
 {
-    char *stream_name;
+	dtstream_para_t para;
     stream_wrapper_t *stream;
     void *parent;
+	
+	dtstream_context(dtstream_para_t &_para);
+	int stream_open ();
+	int stream_eof ();
+	int64_t stream_tell ();
+	int64_t stream_get_size ();
+	int stream_read (uint8_t *buf,int len);
+	int stream_seek (int64_t pos,int whence);
+	int stream_close ();
+	
 } dtstream_context_t;
 
 void stream_register_all();
-int stream_open (dtstream_context_t * stm_ctx);
-int stream_eof (dtstream_context_t * stm_ctx);
-int64_t stream_tell (dtstream_context_t *stm_ctx);
-int64_t stream_get_size (dtstream_context_t * stm_ctx);
-int stream_read (dtstream_context_t * stm_ctx, uint8_t *buf,int len);
-int stream_seek (dtstream_context_t * stm_ctx, int64_t pos,int whence);
-int stream_close (dtstream_context_t * stm_ctx);
+
 
 #endif
