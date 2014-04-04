@@ -277,6 +277,8 @@ dtaudio_decoder::dtaudio_decoder(dtaudio_para_t& para)
 	aparam.audio_filter = para.audio_filter;
 	aparam.audio_output = para.audio_output;
 	aparam.avctx_priv = para.avctx_priv;
+	
+	this->status = ADEC_STATUS_IDLE;
 }
 
 int dtaudio_decoder::audio_decoder_init ()

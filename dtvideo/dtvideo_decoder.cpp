@@ -46,6 +46,36 @@ static int64_t pts_exchange (dtvideo_decoder_t * decoder, int64_t pts)
     return pts;
 }
 
+dtvideo_decoder::dtvideo_decoder(dtvideo_para_t& _para)
+{
+	para.d_height = _para.d_height;
+	para.d_width = _para.d_width;
+	para.d_pixfmt = _para.d_pixfmt;
+	para.s_height = _para.s_height;
+	para.s_pixfmt = _para.s_pixfmt;
+	para.s_width = _para.s_width;
+	para.vfmt = _para.vfmt;
+	
+	para.den = _para.den;
+	para.num = _para.num;
+	
+	para.extradata_size = _para.extradata_size;
+	for(int i = 0; i< para.extradata_size; i ++)
+		para.extradata[i] = _para.extradata[i];
+	
+	para.fps = _para.fps;
+	para.rate = _para.rate;
+	para.ratio = _para.ratio;
+	
+	
+	para.video_filter = _para.video_filter;
+	para.video_output = _para.video_output;
+	
+	para.avctx_priv = _para.avctx_priv;
+	
+	this->status = VDEC_STATUS_IDLE;
+}
+
 static void *video_decode_loop (void *arg)
 {
     dt_av_frame_t frame;
@@ -135,24 +165,24 @@ static void *video_decode_loop (void *arg)
     return NULL;
 }
 
-int video_decoder_init (dtvideo_decoder_t * decoder)
+int dtvideo_decoder::video_decoder_init ()
 {
     int ret = 0;    
     /*select decoder */
-    ret = select_video_decoder (decoder);
+    ret = select_video_decoder (this);
     if (ret < 0)
         return -1;
-	vd_wrapper_t *wrapper = decoder->wrapper;
+	vd_wrapper_t *wrapper = this->wrapper;
     /*init decoder */
-    decoder->pts_current = decoder->pts_first = -1;
-    decoder->decoder_priv = decoder->para.avctx_priv;
-    ret = wrapper->init (wrapper,decoder);
+    this->pts_current = this->pts_first = -1;
+    this->decoder_priv = this->para.avctx_priv;
+    ret = wrapper->init (wrapper,this);
     if (ret < 0)
         return -1;
 
     dt_info (TAG, "[%s:%d] video decoder init ok\n", __FUNCTION__, __LINE__);
     /*init pcm buffer */
-    dtvideo_context_t *vctx = (dtvideo_context_t *) decoder->parent;
+    dtvideo_context_t *vctx = (dtvideo_context_t *) this->parent;
     vctx->vo_queue = queue_new ();
     queue_t *picture_queue = vctx->vo_queue;
     if (NULL == picture_queue)
@@ -161,15 +191,14 @@ int video_decoder_init (dtvideo_decoder_t * decoder)
         return -1;
     }
     
-    decoder->video_decoder_thread = std::thread(video_decode_loop,decoder);	
-    video_decoder_start (decoder);
-    //decoder->status=ADEC_STATUS_RUNNING;//start decode after init
+    this->video_decoder_thread = std::thread(video_decode_loop,this);
+	this->video_decoder_start();
     return 0;
 }
 
-int video_decoder_start (dtvideo_decoder_t * decoder)
+int dtvideo_decoder::video_decoder_start ()
 {
-    decoder->status = VDEC_STATUS_RUNNING;
+    this->status = VDEC_STATUS_RUNNING;
     return 0;
 }
 
@@ -182,16 +211,15 @@ void dtpicture_free (void *pic)
     return;
 }
 
-int video_decoder_stop (dtvideo_decoder_t * decoder)
+int dtvideo_decoder::video_decoder_stop ()
 {
     /*Decode thread exit */
-	vd_wrapper_t *wrapper = decoder->wrapper;
-    decoder->status = VDEC_STATUS_EXIT;
-	decoder->video_decoder_thread.join();
+	vd_wrapper_t *wrapper = this->wrapper;
+    this->status = VDEC_STATUS_EXIT;
+	this->video_decoder_thread.join();
     wrapper->release (wrapper);
     /*uninit buf */
-    dtvideo_context_t *vctx = (dtvideo_context_t *) decoder->parent;
-    //uninit_buf(&vctx->video_decoded_buf);     
+    dtvideo_context_t *vctx = (dtvideo_context_t *) this->parent;
     queue_t *picture_queue = vctx->vo_queue;
     if (picture_queue)
     {

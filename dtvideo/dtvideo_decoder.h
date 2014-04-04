@@ -59,13 +59,14 @@ struct dtvideo_decoder
     dt_buffer_t *buf_out;
     void *parent;
     void *decoder_priv;
+	
+	dtvideo_decoder(dtvideo_para_t &para);
+	int video_decoder_init ();
+	int video_decoder_stop ();
+	int video_decoder_start ();
 };
 
 void vdec_register_all();
-int video_decoder_init (dtvideo_decoder_t * decoder);
-int video_decoder_release (dtvideo_decoder_t * decoder);
-int video_decoder_stop (dtvideo_decoder_t * decoder);
-int video_decoder_start (dtvideo_decoder_t * decoder);
 void dtpicture_free (void *pic);
 
 #endif

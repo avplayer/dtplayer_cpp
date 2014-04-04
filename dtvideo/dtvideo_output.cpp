@@ -65,49 +65,66 @@ int select_vo_device (dtvideo_output_t * vo, int id)
     return -1;
 }
 
-int video_output_start (dtvideo_output_t * vo)
+dtvideo_output::dtvideo_output(dtvideo_para_t& _para)
+{
+	para.d_height = _para.d_height;
+	para.d_width = _para.d_width;
+	para.d_pixfmt = _para.d_pixfmt;
+	para.s_height = _para.s_height;
+	para.s_pixfmt = _para.s_pixfmt;
+	para.s_width = _para.s_width;
+	para.vfmt = _para.vfmt;
+	
+	para.den = _para.den;
+	para.num = _para.num;
+	
+	para.extradata_size = _para.extradata_size;
+	for(int i = 0; i< para.extradata_size; i ++)
+		para.extradata[i] = _para.extradata[i];
+	
+	para.fps = _para.fps;
+	para.rate = _para.rate;
+	para.ratio = _para.ratio;
+	
+	
+	para.video_filter = _para.video_filter;
+	para.video_output = _para.video_output;
+	
+	para.avctx_priv = _para.avctx_priv;
+	
+	this->status = VO_STATUS_IDLE;
+}
+
+int dtvideo_output::video_output_start ()
 {
     /*start playback */
-    vo->status = VO_STATUS_RUNNING;
+    this->status = VO_STATUS_RUNNING;
     return 0;
 }
 
-int video_output_pause (dtvideo_output_t * vo)
+int dtvideo_output::video_output_pause ()
 {
-    vo->status = VO_STATUS_PAUSE;
+    this->status = VO_STATUS_PAUSE;
     return 0;
 }
 
-int video_output_resume (dtvideo_output_t * vo)
+int dtvideo_output::video_output_resume ()
 {
-    vo->status = VO_STATUS_RUNNING;
+    this->status = VO_STATUS_RUNNING;
     return 0;
 }
 
-int video_output_stop (dtvideo_output_t * vo)
+int dtvideo_output::video_output_stop ()
 {
-	vo_wrapper_t *wrapper = vo->wrapper;
-    vo->status = VO_STATUS_EXIT;
-    vo->video_output_thread.join();
+	vo_wrapper_t *wrapper = this->wrapper;
+    this->status = VO_STATUS_EXIT;
+    this->video_output_thread.join();
     wrapper->vo_stop (wrapper);
     dt_info (TAG, "[%s:%d] vout stop ok \n", __FUNCTION__, __LINE__);
     return 0;
 }
 
-int video_output_latency (dtvideo_output_t * vo)
-{
-    return 0;
-#if 0
-    if (ao->status == AO_STATUS_IDLE)
-        return 0;
-    if (ao->status == AO_STATUS_PAUSE)
-        return ao->last_valid_latency;
-    ao->last_valid_latency = ao->aout_ops->ao_latency (ao);
-    return ao->last_valid_latency;
-#endif
-}
-
-int video_output_get_level (dtvideo_output_t * ao)
+int dtvideo_output::video_output_get_level ()
 {
     return 0;
     //return ao->state.aout_buf_level;
@@ -117,7 +134,7 @@ int video_output_get_level (dtvideo_output_t * ao)
 //using pts
 
 #define REFRESH_DURATION 10*1000 //us
-static void *video_output_thread (void *args)
+static void *video_output_loop (void *args)
 {
     dtvideo_output_t *vo = (dtvideo_output_t *) args;
 	vo_wrapper_t *wrapper = vo->wrapper;
@@ -225,23 +242,18 @@ static void *video_output_thread (void *args)
     return NULL;
 }
 
-int video_output_init (dtvideo_output_t * vo, int vo_id)
+int dtvideo_output::video_output_init (int vo_id)
 {
     int ret = 0;    
     /*select ao device */
-    ret = select_vo_device (vo, vo_id);
+    ret = select_vo_device (this, vo_id);
     if (ret < 0)
         return -1;
-	vo_wrapper_t *wrapper = vo->wrapper;
-    wrapper->vo_init (wrapper, vo);
+	vo_wrapper_t *wrapper = this->wrapper;
+    wrapper->vo_init (wrapper, this);
     dt_info (TAG, "[%s:%d] video output init success\n", __FUNCTION__, __LINE__);
 
-    vo->video_output_thread = std::thread(video_output_thread,vo);
+    this->video_output_thread = std::thread(video_output_loop,this);
     dt_info (TAG, "[%s:%d] create video output thread success\n", __FUNCTION__, __LINE__);
-    return 0;
-}
-
-uint64_t video_output_get_latency (dtvideo_output_t * vo)
-{
     return 0;
 }

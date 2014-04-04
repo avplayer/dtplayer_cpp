@@ -68,16 +68,17 @@ struct dtvideo_output
 
     uint64_t last_valid_latency;
     void *parent;               //point to dtaudio_t, can used for param of pcm get interface
+    
+    dtvideo_output(dtvideo_para_t &para);
+	int video_output_init (int vo_id);
+	int video_output_release ();
+	int video_output_stop ();
+	int video_output_resume ();
+	int video_output_pause ();
+	int video_output_start ();
+	int video_output_get_level ();
 };
 
 void vout_register_all();
-int video_output_init (dtvideo_output_t * vo, int vo_id);
-int video_output_release (dtvideo_output_t * vo);
-int video_output_stop (dtvideo_output_t * vo);
-int video_output_resume (dtvideo_output_t * vo);
-int video_output_pause (dtvideo_output_t * vo);
-int video_output_start (dtvideo_output_t * vo);
 
-uint64_t video_output_get_latency (dtvideo_output_t * vo);
-int video_output_get_level (dtvideo_output_t * vo);
 #endif

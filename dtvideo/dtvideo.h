@@ -29,28 +29,37 @@ typedef enum
     VIDEO_STATUS_TERMINATED,
 } dtvideo_status_t;
 
-typedef struct
+typedef struct dtvideo_context
 {
-    /*param */
-    dtvideo_para_t video_para;
-    //dt_buffer_t video_decoded_buf;
-    dt_buffer_t video_filtered_buf;
-    /*module */
-    dtvideo_decoder_t video_dec;
-    //dtvideo_filter_t video_filt;
-    dtvideo_output_t video_out;
+    dtvideo_para_t video_para;    
+	
+    dtvideo_decoder_t *video_dec;
+    dtvideo_output_t *video_out;
     queue_t *vo_queue;
 
-    /*pts relative */
+    /*pts*/
     int64_t first_pts;
     int64_t current_pts;
     int64_t last_valid_pts;
-    /*other */
     dtvideo_status_t video_status;
 
     int event_loop_id;
     void *video_server;
     void *parent;               //dthost
+    
+    dtvideo_context(dtvideo_para_t &para);
+	int64_t video_get_current_pts ();
+	int64_t video_get_first_pts ();
+	int video_drop (int64_t target_pts);
+
+	int video_get_dec_state (dec_state_t * dec_state);
+	int video_get_out_closed ();
+	int video_start ();
+	int video_pause ();
+	int video_resume ();
+	int video_stop ();
+	int video_init ();
+    
 } dtvideo_context_t;
 
 void video_register_all();
@@ -58,18 +67,10 @@ int dtvideo_read_frame (void *priv, dt_av_frame_t * frame);
 AVPicture_t *dtvideo_output_read (void *priv);
 AVPicture_t *dtvideo_output_pre_read (void *priv);
 int dtvideo_get_avdiff (void *priv);
-int64_t dtvideo_get_current_pts (dtvideo_context_t * vctx);
-int64_t video_get_first_pts (dtvideo_context_t * vctx);
-int video_drop (dtvideo_context_t * vctx, int64_t target_pts);
 int64_t dtvideo_get_systime (void *priv);
 void dtvideo_update_systime (void *priv, int64_t sys_time);
 void dtvideo_update_pts (void *priv);
-int video_get_dec_state (dtvideo_context_t * vctx, dec_state_t * dec_state);
-int video_get_out_closed (dtvideo_context_t * vctx);
-int video_start (dtvideo_context_t * vctx);
-int video_pause (dtvideo_context_t * vctx);
-int video_resume (dtvideo_context_t * vctx);
-int video_stop (dtvideo_context_t * vctx);
-int video_init (dtvideo_context_t * vctx);
+
+
 
 #endif

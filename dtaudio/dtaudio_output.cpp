@@ -82,6 +82,8 @@ dtaudio_output::dtaudio_output(dtaudio_para_t& _para)
 	para.audio_filter = _para.audio_filter;
 	para.audio_output = _para.audio_output;
 	para.avctx_priv = _para.avctx_priv;
+	
+	this->status = AO_STATUS_IDLE;
 }
 
 

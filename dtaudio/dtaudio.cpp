@@ -90,7 +90,8 @@ dtaudio_context::dtaudio_context(dtaudio_para_t &para)
 	audio_param.audio_filter = para.audio_filter;
 	audio_param.audio_output = para.audio_output;
 	audio_param.avctx_priv = para.avctx_priv;
-
+	
+	this->audio_state = AUDIO_STATUS_IDLE;
 }
 
 int64_t dtaudio_context::audio_get_first_pts ()
@@ -227,8 +228,12 @@ int dtaudio_context::audio_stop ()
     {
         dtaudio_output_t *audio_out = actx->audio_out;
 		audio_out->audio_output_stop();
+		delete(audio_out);
+		actx->audio_out = nullptr;
         dtaudio_decoder_t *audio_decoder = actx->audio_dec;
 		audio_decoder->audio_decoder_stop();
+		delete(audio_decoder);
+		actx->audio_dec = nullptr;
         actx->audio_state = AUDIO_STATUS_STOP;
     }
     return 0;
