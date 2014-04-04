@@ -73,13 +73,21 @@ static void dump_media_info (dt_media_info_t * info)
     dt_info (TAG, "|================================================|\n", info->file_name);
 }
 
-int demuxer_open (dtdemuxer_context_t * dem_ctx)
+dtdemuxer_context::dtdemuxer_context(dtdemuxer_para_t& _para)
+{
+	para.file_name = _para.file_name;
+	demuxer = nullptr;
+	stream_priv = nullptr;
+	parent = nullptr;
+}
+
+int dtdemuxer_context::demuxer_open ()
 {
     int ret = 0;
     /* open stream */
     dtstream_para_t para;
-    para.stream_name = dem_ctx->file_name; 
-    ret = dtstream_open(&dem_ctx->stream_priv,&para,dem_ctx);
+    para.stream_name = this->para.file_name; 
+    ret = dtstream_open(&this->stream_priv,&para,this);
     if(ret != DTERROR_NONE)
     {
         dt_error (TAG, "stream open failed \n");
@@ -108,26 +116,26 @@ int demuxer_open (dtdemuxer_context_t * dem_ctx)
 
     if(probe_enable)
     {
-        int64_t old_pos = dtstream_tell(dem_ctx->stream_priv);
+        int64_t old_pos = dtstream_tell(this->stream_priv);
         dt_info(TAG,"old:%lld \n",old_pos);
-        ret = buf_init(&dem_ctx->probe_buf,PROBE_BUF_SIZE);
+        ret = buf_init(&this->probe_buf,PROBE_BUF_SIZE);
         if(ret < 0)
             return -1; 
-        ret = dtstream_read(dem_ctx->stream_priv,dem_ctx->probe_buf.data,probe_size); 
+        ret = dtstream_read(this->stream_priv,this->probe_buf.data,probe_size); 
         if(ret <= 0)
             return -1;
-        dem_ctx->probe_buf.level = ret;
-        ret = dtstream_seek(dem_ctx->stream_priv,old_pos,SEEK_SET); 
+        this->probe_buf.level = ret;
+        ret = dtstream_seek(this->stream_priv,old_pos,SEEK_SET); 
         dt_info(TAG,"seek back to:%lld ret:%d \n",old_pos,ret);
     }
 
     /* select demuxer */
-    if (demuxer_select (dem_ctx) == -1)
+    if (demuxer_select (this) == -1)
     {
         dt_error (TAG, "select demuxer failed \n");
         return -1;
     }
-    demuxer_wrapper_t *wrapper = dem_ctx->demuxer;
+    demuxer_wrapper_t *wrapper = this->demuxer;
     ret = wrapper->open (wrapper);
     if (ret < 0)
     {
@@ -135,32 +143,32 @@ int demuxer_open (dtdemuxer_context_t * dem_ctx)
         return -1;
     }
     dt_info (TAG, "demuxer open ok\n");
-    dt_media_info_t *info = &(dem_ctx->media_info);
+    dt_media_info_t *info = &(this->media_info);
     wrapper->setup_info (wrapper, info);
     dump_media_info (info);
     dt_info (TAG, "demuxer setup info ok\n");
     return 0;
 }
 
-int demuxer_read_frame (dtdemuxer_context_t * dem_ctx, dt_av_frame_t * frame)
+int dtdemuxer_context::demuxer_read_frame (dt_av_frame_t * frame)
 {
-    demuxer_wrapper_t *wrapper = dem_ctx->demuxer;
+    demuxer_wrapper_t *wrapper = this->demuxer;
     return wrapper->read_frame (wrapper, frame);
 }
 
-int demuxer_seekto (dtdemuxer_context_t * dem_ctx, int timestamp)
+int dtdemuxer_context::demuxer_seekto (int timestamp)
 {
-    demuxer_wrapper_t *wrapper = dem_ctx->demuxer;
+    demuxer_wrapper_t *wrapper = this->demuxer;
     return wrapper->seek_frame (wrapper, timestamp);
 }
 
-int demuxer_close (dtdemuxer_context_t * dem_ctx)
+int dtdemuxer_context::demuxer_close ()
 {
     int i = 0;
-    demuxer_wrapper_t *wrapper = dem_ctx->demuxer;
+    demuxer_wrapper_t *wrapper = this->demuxer;
     wrapper->close (wrapper);
     /*free media info */
-    dt_media_info_t *info = &(dem_ctx->media_info);
+    dt_media_info_t *info = &(this->media_info);
     if (info->has_audio)
         for (i = 0; i < info->ast_num; i++)
         {
@@ -192,8 +200,8 @@ int demuxer_close (dtdemuxer_context_t * dem_ctx)
             info->sstreams[i] = NULL;
         }
     /* release probe buf */
-    buf_release(&dem_ctx->probe_buf);
+    buf_release(&this->probe_buf);
     /* close stream */
-    dtstream_close(dem_ctx->stream_priv);
+    dtstream_close(this->stream_priv);
     return 0;
 }

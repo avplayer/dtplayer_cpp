@@ -59,7 +59,7 @@ static int demuxer_ffmpeg_open (demuxer_wrapper_t * wrapper)
     int err, ret;
     
     dtdemuxer_context_t *ctx = (dtdemuxer_context_t *)wrapper->parent;
-    char *file_name = ctx->file_name;
+    char *file_name = ctx->para.file_name;
 
     av_register_all ();
     err = avformat_open_input (&ic, file_name, NULL, NULL);

@@ -4,6 +4,7 @@
 #include "dt_media_info.h"
 #include "dtstream_api.h"
 #include "dt_av.h"
+#include "dtdemuxer_api.h"
 
 #include <stdio.h>
 #include <stddef.h>
@@ -40,20 +41,23 @@ typedef struct demuxer_wrapper
     
 } demuxer_wrapper_t;
 
-typedef struct
+typedef struct dtdemuxer_context
 {
-    char *file_name;
+	dtdemuxer_para_t para;
     dt_media_info_t media_info;
     demuxer_wrapper_t *demuxer;
     dt_buffer_t probe_buf;    
     void *stream_priv;
     void *parent;
+	
+	dtdemuxer_context(dtdemuxer_para_t &_para);	
+	int demuxer_open ();
+	int demuxer_read_frame (dt_av_frame_t * frame);
+	int demuxer_seekto (int timestamp);
+	int demuxer_close ();
+	
 } dtdemuxer_context_t;
 
 void demuxer_register_all();
-int demuxer_open (dtdemuxer_context_t * dem_ctx);
-int demuxer_read_frame (dtdemuxer_context_t * dem_ctx, dt_av_frame_t * frame);
-int demuxer_seekto (dtdemuxer_context_t * dem_ctx, int timestamp);
-int demuxer_close (dtdemuxer_context_t * dem_ctx);
 
 #endif
