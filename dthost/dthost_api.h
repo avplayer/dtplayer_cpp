@@ -42,11 +42,9 @@ typedef struct
     int video_dest_pixfmt;
     int video_src_pixfmt;
     int video_rate;
-    int video_extr;
     int video_ratio;
     double video_fps;
     int video_num, video_den;   //for stream pts calc
-    void *video_para;
     unsigned long long ratio64;
     int video_extra_size;
     unsigned char video_extra_data[VIDEO_EXTR_DATA_SIZE];

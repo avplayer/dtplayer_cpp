@@ -6,7 +6,7 @@
 
 #include <stdlib.h>
 
-typedef struct
+typedef struct dthost_context
 {
     dthost_para_t para;
     /*av sync */
@@ -21,26 +21,30 @@ typedef struct
     void *port_priv;
     void *audio_priv;
     void *video_priv;
+	
+	dthost_context(dthost_para_t &_para);
+	int host_start ();
+	int host_pause ();
+	int host_resume ();
+	int host_stop ();
+	int host_init ();
+	int host_write_frame (dt_av_frame_t * frame, int type);
+	int host_read_frame (dt_av_frame_t * frame, int type);
+
+	int host_sync_enable ();
+	int64_t host_get_apts ();
+	int64_t host_get_vpts ();
+	int64_t host_get_systime ();
+	int64_t host_get_avdiff ();
+	int64_t host_get_current_time ();
+	int host_update_apts (int64_t apts);
+	int host_update_vpts (int64_t vpts);
+	int host_update_systime (int64_t sys_time);
+	int host_get_state (host_state_t * state);
+	int host_get_out_closed ();
+	
 } dthost_context_t;
 
-int host_start (dthost_context_t * hctx);
-int host_pause (dthost_context_t * hctx);
-int host_resume (dthost_context_t * hctx);
-int host_stop (dthost_context_t * hctx);
-int host_init (dthost_context_t * hctx);
-int host_write_frame (dthost_context_t * hctx, dt_av_frame_t * frame, int type);
-int host_read_frame (dthost_context_t * hctx, dt_av_frame_t * frame, int type);
 
-int host_sync_enable (dthost_context_t * hctx);
-int64_t host_get_apts (dthost_context_t * hctx);
-int64_t host_get_vpts (dthost_context_t * hctx);
-int64_t host_get_systime (dthost_context_t * hctx);
-int64_t host_get_avdiff (dthost_context_t * hctx);
-int64_t host_get_current_time (dthost_context_t * hctx);
-int host_update_apts (dthost_context_t * hctx, int64_t apts);
-int host_update_vpts (dthost_context_t * hctx, int64_t vpts);
-int host_update_systime (dthost_context_t * hctx, int64_t sys_time);
-int host_get_state (dthost_context_t * hctx, host_state_t * state);
-int host_get_out_closed (dthost_context_t * hctx);
 
 #endif
