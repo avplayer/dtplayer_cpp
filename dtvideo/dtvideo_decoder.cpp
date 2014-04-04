@@ -122,14 +122,6 @@ static void *video_decode_loop (void *arg)
             dt_debug (TAG, "[%s:%d] dtaudio decoder loop read frame failed \n", __FUNCTION__, __LINE__);
             continue;
         }
-        //update current pts, clear the buffer size
-        if (frame.pts >= 0 && decoder->pts_first == -1)
-        {
-            //we will use first pts to estimate pts
-            dt_info (TAG, "[%s:%d]first frame: pts:%llu dts:%llu duration:%d size:%d\n", __FUNCTION__, __LINE__, frame.pts, frame.dts, frame.duration, frame.size);
-            decoder->pts_first = pts_exchange (decoder, frame.pts);
-
-        }
 
         /*read one frame,enter decode frame module */
         //will exec once for one time
@@ -143,6 +135,14 @@ static void *video_decode_loop (void *arg)
         }
         if (!picture)
             goto DECODE_END;
+		
+        if (picture->pts >= 0 && decoder->pts_first == -1)
+        {
+            //use first decoded pts to estimate pts
+            dt_info (TAG, "[%s:%d]first frame: pts:%llu dts:%llu duration:%d size:%d\n", __FUNCTION__, __LINE__, frame.pts, frame.dts, frame.duration, frame.size);
+            decoder->pts_first = pts_exchange (decoder, picture->pts);
+
+        }
         decoder->frame_count++;
         //Got one frame
         //picture->pts = frame.pts;
