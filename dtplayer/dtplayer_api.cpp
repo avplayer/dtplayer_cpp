@@ -7,8 +7,6 @@
 
 #define TAG "PLAYER-API"
 
-static dtplayer_context_t ply_ctx;
-
 dtplayer_para_t *dtplayer_alloc_para ()
 {
     dtplayer_para_t *para = (dtplayer_para_t *) malloc (sizeof (dtplayer_para_t));
@@ -40,20 +38,19 @@ int dtplayer_init (void **player_priv, dtplayer_para_t * para)
     if (!para)
         return -1;
     player_register_all();
-    //dtplayer_context_t *dtp_ctx = malloc(sizeof(dtplayer_context_t));
-    dtplayer_context_t *dtp_ctx = &ply_ctx;
+	
+	dtplayer_para_t &ppara = *para;
+    dtplayer_context_t *dtp_ctx = new dtplayer_context(ppara);
     if (!dtp_ctx)
     {
         dt_error (TAG, "dtplayer context malloc failed \n");
         return -1;
     }
-    memset (dtp_ctx, 0, sizeof (*dtp_ctx));
-    memcpy (&dtp_ctx->player_para, para, sizeof (dtplayer_para_t));
-
+    
     /*init server for player and process */
     dt_event_server_init ();
     /*init player */
-    ret = player_init (dtp_ctx);
+    ret = dtp_ctx->player_init ();
     if (ret < 0)
     {
         dt_error (TAG, "PLAYER INIT FAILED \n");
@@ -106,6 +103,8 @@ int dtplayer_stop (void *player_priv)
 
     /*need to wait until player stop ok */
 	dtp_ctx->event_loop_thread.join();
+	delete(dtp_ctx);
+	player_priv = nullptr;
     return 0;
 }
 

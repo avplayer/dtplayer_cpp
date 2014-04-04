@@ -2,15 +2,15 @@
 
 #define TAG "PLAYER-UTIL"
 
-int player_host_init (dtplayer_context_t * dtp_ctx)
+int dtplayer_context::player_host_init ()
 {
     int ret;
     char value[512];
     
-    dthost_para_t *host_para = &dtp_ctx->host_para;
-    player_ctrl_t *pctrl = &dtp_ctx->ctrl_info;
+    dthost_para_t *host_para = &this->host_para;
+    player_ctrl_t *pctrl = &this->ctrl_info;
     memset (host_para, 0, sizeof (dthost_para_t));
-    dt_media_info_t *media_info = dtp_ctx->media_info;
+    dt_media_info_t *media_info = this->media_info;
 
     /* init dthost param */
     host_para->has_audio = pctrl->has_audio;
@@ -104,8 +104,8 @@ int player_host_init (dtplayer_context_t * dtp_ctx)
     }
     //----sub part------
     /* init dthost */
-    dtp_ctx->host_priv = NULL;
-    ret = dthost_init (&dtp_ctx->host_priv, host_para);
+    this->host_priv = NULL;
+    ret = dthost_init (&this->host_priv, host_para);
     if (ret < 0)
     {
         dt_error (TAG, "[%s:%d] DTHOST_INIF FAILED \n", __FUNCTION__, __LINE__);
@@ -117,24 +117,24 @@ int player_host_init (dtplayer_context_t * dtp_ctx)
     return ret;
 }
 
-int player_host_start (dtplayer_context_t * dtp_ctx)
+int dtplayer_context::player_host_start ()
 {
-    return dthost_start (dtp_ctx->host_priv);
+    return dthost_start (this->host_priv);
 }
 
-int player_host_pause (dtplayer_context_t * dtp_ctx)
+int dtplayer_context::player_host_pause ()
 {
-    return dthost_pause (dtp_ctx->host_priv);
+    return dthost_pause (this->host_priv);
 }
 
-int player_host_resume (dtplayer_context_t * dtp_ctx)
+int dtplayer_context::player_host_resume ()
 {
-    return dthost_resume (dtp_ctx->host_priv);
+    return dthost_resume (this->host_priv);
 }
 
-int player_host_stop (dtplayer_context_t * dtp_ctx)
+int dtplayer_context::player_host_stop ()
 {
-    int ret = dthost_stop (dtp_ctx->host_priv);
+    int ret = dthost_stop (this->host_priv);
     dt_info (TAG, "host module quit ok \n");
     return ret;
 }

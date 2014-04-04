@@ -46,7 +46,6 @@ typedef struct
 
 typedef struct dtplayer_context
 {
-    char *file_name;
     dtplayer_para_t player_para;
 
     void *demuxer_priv;
@@ -63,14 +62,41 @@ typedef struct dtplayer_context
 	std::thread event_loop_thread;
 
     void *player_server;
+	
+	dtplayer_context(dtplayer_para_t &para);
+	void set_player_status (player_status_t status);
+	player_status_t get_player_status ();
+	int player_server_init ();
+	int player_server_release ();
+	int player_handle_event ();
+	
+	/*update*/
+	int calc_cur_time (host_state_t * host_state);
+	int player_handle_cb ();
+	void player_update_state ();
+	
+	/*io*/
+	int start_io_thread ();
+	int pause_io_thread ();
+	int resume_io_thread ();
+	int stop_io_thread ();
+	
+	/*utils*/
+	int player_host_init ();
+	int player_host_start ();
+	int player_host_pause ();
+	int player_host_resume ();
+	int player_host_stop ();
+	
+	int player_init ();
+	int player_start ();
+	int player_pause ();
+	int player_resume ();
+	int player_seekto (int seek_time);
+	int player_stop ();
+	
 } dtplayer_context_t;
 
 void player_register_all();
-int player_init (dtplayer_context_t * dtp_ctx);
-int player_start (dtplayer_context_t * dtp_ctx);
-int player_pause (dtplayer_context_t * dtp_ctx);
-int player_resume (dtplayer_context_t * dtp_ctx);
-int player_seekto (dtplayer_context_t * dtp_ctx, int seek_time);
-int player_stop (dtplayer_context_t * dtp_ctx);
 
 #endif
