@@ -2,14 +2,11 @@
 #include "dtport_api.h"
 #include "dtaudio_api.h"
 #include "dtvideo_api.h"
+#include "dt_macro.h"
 
 #include "unistd.h"
 
 #define TAG "host-MGT"
-#define AVSYNC_THRESHOLD 100    //ms
-#define AVSYNC_THRESHOLD_MAX  3*1000 //ms
-#define AVSYNC_DROP_THRESHOLD  10*1000 //ms
-
 
 dthost_context::dthost_context(dthost_para_t &_para)
 {
@@ -234,12 +231,12 @@ int dthost_context::host_start ()
 
     int drop_flag = 0;
     int av_diff_ms = abs (this->pts_video - this->pts_audio) / 90;
-    if (av_diff_ms > 10 * 1000)
+    if (av_diff_ms > AV_DROP_THRESHOLD)
     {
-        dt_info (TAG, "FIRST AV DIFF EXCEED 10S,DO NOT DROP\n");
+        dt_info (TAG, "FIRST AV DIFF EXCEED :%d ms,DO NOT DROP\n",AV_DROP_THRESHOLD);
         this->sync_mode = DT_SYNC_VIDEO_MASTER;
     }
-    drop_flag = (av_diff_ms > 100 && av_diff_ms < AVSYNC_DROP_THRESHOLD); // exceed 100ms
+    drop_flag = (av_diff_ms > 100 && av_diff_ms < AV_DROP_THRESHOLD); // exceed 100ms
     if (!this->host_sync_enable ())
         drop_flag = 0;
     if (drop_flag)

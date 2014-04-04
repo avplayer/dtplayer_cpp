@@ -45,6 +45,4 @@ typedef struct dthost_context
 	
 } dthost_context_t;
 
-
-
 #endif
