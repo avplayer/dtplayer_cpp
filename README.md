@@ -8,7 +8,7 @@ This program is free software: you can redistribute it and/or modify it under th
 Introduction
 ========
 
-dtplayer is based on C , aimed to provide multimedia playing service base on ffmpeg2.0.
+dtplayer is based on C++ , aimed to provide multimedia playing service base on ffmpeg2.0.
 
 At present, dtplayer have provided examples on stream-demuxer-decoder-render modules. User can easily understand how to add new element.
 
@@ -27,13 +27,18 @@ Compile
 Test
 ========
 
+cd build
+
 ./dtm_player url
 
-Bug Report
+Help
 =========
-peter_future@outlook.com
 
-Blog
-=========
-http://blog.csdn.net/u011350110/article/details/10718661
+bug report: peter_future@outlook.com microcaicai@gmail.com 
+
+blog: http://blog.csdn.net/u011350110
+
+bbs: http://avboost.com/
+
+wiki: http://wiki.avplayer.org/Dtplayer
 
