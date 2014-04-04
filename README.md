@@ -31,8 +31,13 @@ cd build
 
 ./dtm_player url
 
+Todo
+========
+
+Trello:https://trello.com/b/e7qJjBUu/dtplayer
+
 Help
-=========
+========
 
 bug report: peter_future@outlook.com microcaicai@gmail.com 
 
