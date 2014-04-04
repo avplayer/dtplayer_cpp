@@ -7,25 +7,19 @@ int dtport_stop (void *port)
 {
     int ret = 0;
     dtport_context_t *pctx = (dtport_context_t *) port;
-    port_stop (pctx);
-    free (pctx);
-    port = NULL;
+	pctx->port_stop();
+	delete(pctx);
     return ret;
 
 }
 
 int dtport_init (void **port, dtport_para_t * para, void *parent)
 {
-    int ret;
-    dtport_context_t *pctx = (dtport_context_t*) malloc (sizeof (dtport_context_t));
-    if (!pctx)
-    {
-        dt_error ("[%s:%d] dtport_context_t malloc failed \n", __FUNCTION__, __LINE__);
-        ret = -1;
-        goto ERR0;
-    }
-    memset (pctx, 0, sizeof (dtport_context_t));
-    ret = port_init (pctx, para);
+    int ret;	
+    dtport_para_t &ppara = *para;
+    dtport_context_t *pctx = new dtport_context(ppara);
+    
+	ret = pctx->port_init();
     if (ret < 0)
     {
         dt_error ("[%s:%d] dtport_init failed \n", __FUNCTION__, __LINE__);
@@ -45,18 +39,18 @@ int dtport_init (void **port, dtport_para_t * para, void *parent)
 int dtport_write_frame (void *port, dt_av_frame_t * frame, int type)
 {
     dtport_context_t *pctx = (dtport_context_t *) port;
-    return port_write_frame (pctx, frame, type);
+    return pctx->port_write_frame (frame, type);
 }
 
 int dtport_read_frame (void *port, dt_av_frame_t * frame, int type)
 {
     dtport_context_t *pctx = (dtport_context_t *) port;
-    return port_read_frame (pctx, frame, type);
+    return pctx->port_read_frame (frame, type);
 }
 
 //==Part3:State
 int dtport_get_state (void *port, buf_state_t * buf_state, int type)
 {
     dtport_context_t *pctx = (dtport_context_t *) port;
-    return port_get_state (pctx, buf_state, type);
+    return pctx->port_get_state (buf_state, type);
 }
