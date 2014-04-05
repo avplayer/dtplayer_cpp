@@ -82,7 +82,7 @@ static void *video_decode_loop (void *arg)
     dtvideo_decoder_t *decoder = (dtvideo_decoder_t *) arg;
     vd_wrapper_t *wrapper = decoder->wrapper;
     dtvideo_context_t *vctx = (dtvideo_context_t *) decoder->parent;
-    queue_t *picture_queue = vctx->vo_queue;
+
     /*used for decode */
     AVPicture_t *picture = NULL;
     int ret;
@@ -109,7 +109,7 @@ static void *video_decode_loop (void *arg)
             continue;
         }
 
-        if (picture_queue->length >= VIDEO_OUT_MAX_COUNT)
+        if (vctx->queue_vo.size() >= VIDEO_OUT_MAX_COUNT)
         {
             //vo queue full
             usleep (1000);
@@ -147,7 +147,9 @@ static void *video_decode_loop (void *arg)
         //Got one frame
         //picture->pts = frame.pts;
         /*queue in */
-        queue_push_tail (picture_queue, picture);
+		vctx->mux_vo_queue.lock();
+		vctx->queue_vo.push(picture);
+		vctx->mux_vo_queue.unlock();
         picture = NULL;
       DECODE_END:
         //we successfully decodec one frame
@@ -179,18 +181,8 @@ int dtvideo_decoder::video_decoder_init ()
         return -1;
 
     dt_info (TAG, "[%s:%d] video decoder init ok\n", __FUNCTION__, __LINE__);
-    /*init pcm buffer */
-    dtvideo_context_t *vctx = (dtvideo_context_t *) this->parent;
-    vctx->vo_queue = queue_new ();
-    queue_t *picture_queue = vctx->vo_queue;
-    if (NULL == picture_queue)
-    {
-        dt_error (TAG, "create video out queue failed\n");
-        return -1;
-    }
-    
-    this->video_decoder_thread = std::thread(video_decode_loop,this);
-	this->video_decoder_start();
+    video_decoder_thread = std::thread(video_decode_loop,this);
+	video_decoder_start();
     return 0;
 }
 
@@ -217,12 +209,16 @@ int dtvideo_decoder::video_decoder_stop ()
 	this->video_decoder_thread.join();
     wrapper->release (wrapper);
     /*uninit buf */
-    dtvideo_context_t *vctx = (dtvideo_context_t *) this->parent;
-    queue_t *picture_queue = vctx->vo_queue;
-    if (picture_queue)
-    {
-        queue_free (picture_queue, (free_func) dtpicture_free);
-        picture_queue = NULL;
-    }
+	dtvideo_context_t *vctx = (dtvideo_context_t *)this->parent;
+    vctx->mux_vo_queue.lock();
+	while(!vctx->queue_vo.empty())
+	{
+		AVPicture_t *pic = vctx->queue_vo.front();
+		dtpicture_free(pic);
+		delete(pic);
+		vctx->queue_vo.pop();
+	}
+	vctx->mux_vo_queue.unlock();
+    
     return 0;
 }

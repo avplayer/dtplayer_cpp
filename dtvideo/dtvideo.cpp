@@ -28,24 +28,31 @@ int dtvideo_filter_read ()
 AVPicture_t *dtvideo_output_read (void *priv)
 {
     dtvideo_context_t *vctx = (dtvideo_context_t *) priv;
-    queue_t *picture_queue = vctx->vo_queue;
-    if (picture_queue->length == 0)
-    {
-        return NULL;
-    }
-    return (AVPicture_t*) queue_pop_head (picture_queue);
+	AVPicture_t *pic = nullptr;
+	vctx->mux_vo_queue.lock();
+	if(!vctx->queue_vo.empty())
+	{
+		pic = vctx->queue_vo.front();
+		vctx->queue_vo.pop();
+	}
+	vctx->mux_vo_queue.unlock();
+   
+    return pic;
 }
 
 /*pre get picture from vo_queue, not remove*/
 AVPicture_t *dtvideo_output_pre_read (void *priv)
 {
     dtvideo_context_t *vctx = (dtvideo_context_t *) priv;
-    queue_t *picture_queue = vctx->vo_queue;
-    if (picture_queue->length == 0)
-    {
-        return NULL;
-    }
-    return (AVPicture_t*)queue_pre_pop_head (picture_queue);
+	AVPicture_t *pic = nullptr;
+	vctx->mux_vo_queue.lock();
+	if(!vctx->queue_vo.empty())
+	{
+		pic = vctx->queue_vo.front();
+	}
+	vctx->mux_vo_queue.unlock();
+   
+    return pic;
 }
 
 int64_t dtvideo_get_systime (void *priv)

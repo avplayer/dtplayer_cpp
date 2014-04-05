@@ -9,8 +9,16 @@
 #include "dtvideo_output.h"
 
 #include <unistd.h>
+#include <mutex>
+#include <queue>
 
 #define DTVIDEO_BUF_SIZE 1024*1024
+
+#if 0
+namespace std {
+template<class _Tp, class _Sequence = deque< _Tp > >
+class queue;}
+#endif
 
 typedef enum
 {
@@ -30,7 +38,9 @@ typedef struct dtvideo_context
 	
     dtvideo_decoder_t *video_dec;
     dtvideo_output_t *video_out;
-    queue_t *vo_queue;
+    //queue_t *vo_queue;
+	std::mutex mux_vo_queue;
+	std::queue<AVPicture_t *> queue_vo;
 
     /*pts*/
     int64_t first_pts;

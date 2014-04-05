@@ -222,6 +222,7 @@ static void *video_output_loop (void *args)
                 continue;
             }
         }
+
         /*display picture & update vpts */
         ret = wrapper->vo_render (wrapper, pic);
         if (ret < 0)
