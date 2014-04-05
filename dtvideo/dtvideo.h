@@ -4,7 +4,6 @@
 #include "dt_av.h"
 #include "dtvideo_api.h"
 #include "dt_buffer.h"
-#include "dt_queue.h"
 #include "dtvideo_decoder.h"
 #include "dtvideo_output.h"
 

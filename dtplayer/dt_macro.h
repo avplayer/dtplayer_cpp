@@ -19,4 +19,5 @@
 /*PORT*/ 
 /*AUDIO*/ 
 /*VIDEO*/
+#define VIDEO_OUT_MAX_COUNT 10
 #endif
