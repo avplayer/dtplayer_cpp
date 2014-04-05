@@ -39,7 +39,7 @@ int dtplayer_context::pause_io_thread ()
     while (this->io_loop.status != IO_LOOP_PAUSED)
         usleep (1000);
     this->io_loop.flag = IO_FLAG_NULL;
-
+    dt_info(TAG,"IO THREAD PAUSE\n");
     return 0;
 }
 
@@ -47,6 +47,7 @@ int dtplayer_context::resume_io_thread ()
 {
     this->io_loop.flag = IO_FLAG_NULL;
     this->io_loop.status = IO_LOOP_RUNNING;
+    dt_info(TAG,"IO THREAD RESUME\n");
     return 0;
 }
 
@@ -55,14 +56,14 @@ int dtplayer_context::stop_io_thread ()
     this->io_loop.flag = IO_FLAG_NULL;
     this->io_loop.status = IO_LOOP_QUIT;
     this->io_loop.io_loop_thread.join();
-    //dt_info(TAG,"io thread quit ok\n");
+    dt_info(TAG,"IO THREAD QUIT OK\n");
     return 0;
 }
 
 static void *player_io_thread (dtplayer_context_t * dtp_ctx)
 {
     io_loop_t *io_ctl = &dtp_ctx->io_loop;
-    dt_av_frame_t frame;
+    dt_av_frame_t *frame = nullptr;
     int frame_valid = 0;
     int ret = 0;
     do
@@ -76,7 +77,10 @@ static void *player_io_thread (dtplayer_context_t * dtp_ctx)
         {
             //when pause read thread,we need skip currnet pkt
             if (frame_valid == 1)
-                free (frame.data);
+			{
+				free (frame->data);
+				delete(frame);
+			}
             frame_valid = 0;
             usleep (10000);
             continue;
@@ -84,8 +88,10 @@ static void *player_io_thread (dtplayer_context_t * dtp_ctx)
         /*io ops */
         if (frame_valid == 1)
             goto WRITE_FRAME;
-        memset(&frame,0,sizeof(dt_av_frame_t));
-        ret = player_read_frame (dtp_ctx, &frame);
+        
+		frame = new dt_av_frame_t;
+		
+        ret = player_read_frame (dtp_ctx, frame);
         if (ret == DTERROR_NONE)
             frame_valid = 1;
         else
@@ -95,23 +101,26 @@ static void *player_io_thread (dtplayer_context_t * dtp_ctx)
                 io_ctl->status = IO_LOOP_QUIT;
                 dtp_ctx->ctrl_info.eof_flag = 1;
             }
+            delete(frame);
             usleep (1000);
             continue;
         }
-        dt_debug (TAG, "read ok size:%d pts:%lld \n",frame.size,frame.pts);
+        dt_debug (TAG, "read ok size:%d pts:%lld \n",frame->size,frame->pts);
       WRITE_FRAME:
-        ret = player_write_frame (dtp_ctx, &frame);
+        ret = player_write_frame (dtp_ctx, frame);
         if (ret == DTERROR_NONE)
         {
-            dt_debug (TAG, "player write ok \n");
+            dt_debug (TAG, "player write ok size:%d \n",frame->size);
+			frame = nullptr;
             frame_valid = 0;
         }
         else
+		{
             dt_debug (TAG, "write frame failed , write again \n");
+		}
     }
     while (1);
   QUIT:
-    dt_info (TAG, "io thread quit ok\n");
-    pthread_exit (NULL);
+    //dt_info (TAG, "io thread quit ok\n");
     return 0;
 }

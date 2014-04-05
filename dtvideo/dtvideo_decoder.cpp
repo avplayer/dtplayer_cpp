@@ -153,15 +153,13 @@ static void *video_decode_loop (void *arg)
         //we successfully decodec one frame
         if (frame.data)
         {
-            free (frame.data);
-            frame.data = NULL;
-            frame.size = 0;
-            frame.pts = -1;
+			free (frame.data);
+			frame.data = nullptr;
+			frame.size = 0;
         }
     }
     while (1);
-    dt_info (TAG, "[file:%s][%s:%d]decoder loop thread exit ok\n", __FILE__, __FUNCTION__, __LINE__);
-    pthread_exit (NULL);
+    dt_info (TAG, "[%s:%d]decoder loop thread exit ok\n",__FUNCTION__, __LINE__);
     return NULL;
 }
 

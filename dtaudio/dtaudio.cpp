@@ -90,7 +90,7 @@ dtaudio_context::dtaudio_context(dtaudio_para_t &para)
 	audio_param.audio_filter = para.audio_filter;
 	audio_param.audio_output = para.audio_output;
 	audio_param.avctx_priv = para.avctx_priv;
-	
+
 	this->audio_state = AUDIO_STATUS_IDLE;
 }
 
@@ -98,6 +98,11 @@ int64_t dtaudio_context::audio_get_first_pts ()
 {
     if (this->audio_state != AUDIO_STATUS_INITED)
         return -1;
+    if(!this->audio_dec)
+        dt_info(TAG,"GET FIRST PTS audio dec null \n");
+    else
+        dt_info(TAG,"GET FIRST PTS :%lld\n",this->audio_dec->pts_first);
+
     return this->audio_dec->pts_first;
 }
 
@@ -241,12 +246,11 @@ int dtaudio_context::audio_stop ()
 
 static void *event_handle_loop (void *args)
 {
-    dtaudio_context_t *actx;
-    actx = (dtaudio_context_t *) args;
+    dtaudio_context_t *actx = (dtaudio_context_t *) args;
     event_t *event = NULL;
     event_server_t *server = (event_server_t *) actx->audio_server;
 
-    dt_info (TAG, "[%s:%d] dtaudio init ok, enter event handle loop\n", __FUNCTION__, __LINE__);
+    dt_info (TAG, "[%s:%d] enter event handle loop\n", __FUNCTION__, __LINE__);
     do
     {
         if (actx->audio_state == AUDIO_STATUS_STOP)
@@ -304,7 +308,6 @@ static void *event_handle_loop (void *args)
     while (1);
 
     dt_info (DTAUDIO_LOG_TAG, "Exit Event Handle Loop Thread!\n");
-    pthread_exit (NULL);
     return NULL;
 
 }

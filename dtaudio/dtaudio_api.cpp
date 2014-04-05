@@ -88,7 +88,7 @@ int dtaudio_resume (void *audio_priv)
 
 int dtaudio_stop (void *audio_priv)
 {
-    int ret;
+    int ret = 0;
     dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
     if (!actx)
     {

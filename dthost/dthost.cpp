@@ -14,8 +14,6 @@ dthost_context::dthost_context(dthost_para_t &_para)
 	para.has_sub = _para.has_sub;
 	para.has_video = _para.has_video;
 	
-
-	
 	para.audio_bitrate = _para.audio_bitrate;
 	para.audio_block_align = _para.audio_block_align;
 	para.audio_channel = _para.audio_channel;
@@ -355,11 +353,14 @@ int dthost_context::host_init ()
      * read from property file, get sync mode setted by user
      * if user not set ,get by default
      */
+	this->sync_enable = host_para->sync_enable;
     if (host_para->has_audio && host_para->has_video)
         this->av_sync = DT_SYNC_AUDIO_MASTER;
     else
+	{
+		this->sync_enable = 0;
         this->av_sync = DT_SYNC_VIDEO_MASTER;
-    this->sync_enable = host_para->sync_enable;
+	}
     this->av_diff = 0;
     this->pts_audio = this->pts_video = this->sys_time = -1;
 
@@ -493,12 +494,14 @@ int dthost_context::host_get_state (host_state_t * state)
         dtport_get_state (this->port_priv, &buf_state, DT_TYPE_AUDIO);
         dtaudio_get_state (this->audio_priv, &dec_state);
         state->abuf_level = buf_state.data_len;
+		state->apkt_size = buf_state.size;
         state->adec_err_cnt = dec_state.adec_error_count;
         state->cur_apts = this->pts_audio;
     }
     else
     {
         state->abuf_level = -1;
+		state->apkt_size = -1;
         state->cur_apts = -1;
         state->adec_err_cnt = -1;
     }
@@ -508,12 +511,14 @@ int dthost_context::host_get_state (host_state_t * state)
         dtport_get_state (this->port_priv, &buf_state, DT_TYPE_VIDEO);
         dtvideo_get_state (this->video_priv, &dec_state);
         state->vbuf_level = buf_state.data_len;
+		state->vpkt_size = buf_state.size;
         state->vdec_err_cnt = dec_state.vdec_error_count;
         state->cur_vpts = this->pts_video;
     }
     else
     {
         state->vbuf_level = -1;
+		state->vpkt_size = -1;
         state->cur_vpts = -1;
         state->vdec_err_cnt = -1;
     }

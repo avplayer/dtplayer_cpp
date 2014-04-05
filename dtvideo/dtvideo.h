@@ -7,12 +7,7 @@
 #include "dt_queue.h"
 #include "dtvideo_decoder.h"
 #include "dtvideo_output.h"
-#if 0
-#include "dtvideo_filter.h"
-#include "dtvideo_output.h"
-#endif
 
-#include <pthread.h>
 #include <unistd.h>
 
 #define DTVIDEO_BUF_SIZE 1024*1024

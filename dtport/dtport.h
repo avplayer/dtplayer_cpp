@@ -1,13 +1,16 @@
 #ifndef DTPORT_H
 #define DTPORT_H
 
-#include "dt_packet_queue.h"
 #include "dt_av.h"
 #include "dtport_api.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include <queue>
+
+#define QUEUE_MAX_PACK_NUM 10
 
 typedef enum
 {
@@ -19,11 +22,15 @@ typedef enum
 } port_status_t;
 
 typedef struct dtport_context
-{
-    dt_packet_queue_t queue_audio;
-    dt_packet_queue_t queue_video;
-    dt_packet_queue_t queue_subtitle;
-
+{  
+    std::queue<dt_av_frame_t *> queue_audio;
+    std::queue<dt_av_frame_t *> queue_video;
+    std::queue<dt_av_frame_t *> queue_sub;
+	
+	std::mutex mux_audio;
+	std::mutex mux_video;
+	std::mutex mux_sub;
+    
     buf_state_t dps_audio;
     buf_state_t dps_video;
     buf_state_t dps_sub;

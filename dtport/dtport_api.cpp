@@ -19,7 +19,7 @@ int dtport_init (void **port, dtport_para_t * para, void *parent)
     dtport_para_t &ppara = *para;
     dtport_context_t *pctx = new dtport_context(ppara);
     
-	ret = pctx->port_init();
+    ret = pctx->port_init();
     if (ret < 0)
     {
         dt_error ("[%s:%d] dtport_init failed \n", __FUNCTION__, __LINE__);

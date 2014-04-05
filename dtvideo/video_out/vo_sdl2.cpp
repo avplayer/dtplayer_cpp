@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
 #include <stdio.h>
+#include <mutex>
 
 #define TAG "VO-SDL2"
 
@@ -10,7 +11,7 @@ typedef struct{
     SDL_Window *win;
     SDL_Renderer *ren;
     SDL_Texture *tex;
-    dt_lock_t vo_mutex;
+    std::mutex mux_vo;
     int dx,dy,dw,dh;
     int sdl_inited;
 }sdl2_ctx_t;
@@ -20,7 +21,6 @@ static int vo_sdl2_init (vo_wrapper_t *wrapper, void *parent)
 	wrapper->parent = parent;
     sdl2_ctx_t *ctx = (sdl2_ctx_t*) malloc(sizeof(sdl2_ctx_t));
     memset(ctx,0,sizeof(*ctx));
-    dt_lock_init (&ctx->vo_mutex, NULL);
     wrapper->handle = (void *)ctx;
     dt_info (TAG, "sdl2 init OK\n");
     return 0;
@@ -104,7 +104,7 @@ static int vo_sdl2_render (vo_wrapper_t *wrapper, AVPicture_t * pict)
         ctx->sdl_inited = !ret;
     }
 
-    dt_lock (&ctx->vo_mutex);
+	ctx->mux_vo.lock();
 
     SDL_Rect dst;
     dst.x = ctx->dx;
@@ -122,14 +122,14 @@ static int vo_sdl2_render (vo_wrapper_t *wrapper, AVPicture_t * pict)
     static SDL_Event event;
     SDL_PollEvent(&event);
     
-    dt_unlock (&ctx->vo_mutex);
+	ctx->mux_vo.unlock();
     return 0;
 }
 
 static int vo_sdl2_stop (vo_wrapper_t *wrapper)
 {
     sdl2_ctx_t *ctx = (sdl2_ctx_t *)wrapper->handle;
-    dt_lock (&ctx->vo_mutex);
+	ctx->mux_vo.lock();
     if(ctx->sdl_inited) 
     {
         SDL_DestroyTexture(ctx->tex);
@@ -137,7 +137,7 @@ static int vo_sdl2_stop (vo_wrapper_t *wrapper)
         SDL_DestroyWindow(ctx->win);
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
     }
-    dt_unlock (&ctx->vo_mutex);
+	ctx->mux_vo.unlock();
     free(ctx);
     wrapper->handle = NULL;
     dt_info (TAG, "stop vo sdl\n");

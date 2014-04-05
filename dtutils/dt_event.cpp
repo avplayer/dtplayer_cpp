@@ -27,7 +27,7 @@
 static dt_server_mgt_t server_mgt;
 static event_server_t main_server;
 
-static void *event_transport_loop (void*);
+static void *event_transport_loop (void *);
 
 int dt_event_server_init ()
 {
@@ -305,7 +305,7 @@ static int dt_transport_event (event_t * event, dt_server_mgt_t * mgt)
     return ret;
 }
 
-static void *event_transport_loop (void*)
+static void *event_transport_loop (void *)
 {
     dt_server_mgt_t *mgt = &server_mgt;
     event_server_t *server_hub = mgt->server;
@@ -324,6 +324,5 @@ static void *event_transport_loop (void*)
 
   QUIT:
     dt_info (TAG, "EVENT_TRANSPORT_LOOP QUIT OK\n");
-    pthread_exit (NULL);
     return NULL;
 }

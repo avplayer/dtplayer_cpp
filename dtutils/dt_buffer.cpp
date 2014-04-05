@@ -20,7 +20,7 @@ int buf_init (dt_buffer_t * dbt, int size)
     dbt->size = size;
     dbt->level = 0;
     dbt->rd_ptr = dbt->wr_ptr = dbt->data;
-    dt_lock_init (&dbt->mutex, NULL);
+	dt_lock_init(&dbt->mutex,NULL);
     dt_info (TAG, "DTBUF INIT OK\n");
     return 0;
 }

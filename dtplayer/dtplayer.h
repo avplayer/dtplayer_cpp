@@ -7,7 +7,6 @@
 #include "dt_av.h"
 #include "dt_event.h"
 
-#include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>

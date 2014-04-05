@@ -3,8 +3,6 @@
 #include "dtplayer.h"
 #include "dt_event.h"
 
-#include "pthread.h"
-
 #define TAG "PLAYER-API"
 
 dtplayer_para_t *dtplayer_alloc_para ()

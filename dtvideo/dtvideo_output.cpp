@@ -238,7 +238,6 @@ static void *video_output_loop (void *args)
     }
   EXIT:
     dt_info (TAG, "[file:%s][%s:%d]ao playback thread exit\n", __FILE__, __FUNCTION__, __LINE__);
-    pthread_exit (NULL);
     return NULL;
 }
 

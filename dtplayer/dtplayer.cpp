@@ -7,7 +7,6 @@
 #include "dtdemuxer.h"
 #include "dtaudio.h"
 #include "dtvideo.h"
-#include "pthread.h"
 
 #define TAG "PLAYER"
 
@@ -119,7 +118,7 @@ void dtplayer_context::player_update_state ()
     this->calc_cur_time (&host_state);
 
     /*show info */
-    dt_info (TAG, "Abuflevel:%d vbuflevel:%d cur_time:%lld(s) %lld(ms) duration:%lld(s) \n ", host_state.abuf_level, host_state.vbuf_level, play_stat->cur_time, play_stat->cur_time_ms, this->media_info->duration);
+    dt_info (TAG, "apkt_size:%d vpkt_size:%d cur_time:%lld(s) %lld(ms) duration:%lld(s) \n ", host_state.apkt_size, host_state.vpkt_size, play_stat->cur_time, play_stat->cur_time_ms, this->media_info->duration);
 }
 
 int dtplayer_context::player_init ()
@@ -131,7 +130,6 @@ int dtplayer_context::player_init ()
     int no_audio_ini = -1;
     int no_video_ini = -1;
     int no_sub_ini = -1;
-
 
     int ret = 0;
     this->set_player_status (PLAYER_STATUS_INIT_ENTER);
@@ -320,6 +318,7 @@ int dtplayer_context::player_seekto (int seek_time)
     this->set_player_status (PLAYER_STATUS_SEEK_EXIT);
     this->player_handle_cb ();
     this->set_player_status (PLAYER_STATUS_RUNNING);
+    dt_info(TAG,"SEEK TO :%d OK\n",seek_time);
     return 0;
   FAIL:
     //seek fail, continue running
@@ -404,7 +403,5 @@ static void *event_handle_loop (dtplayer_context_t * dtp_ctx)
     dtp_ctx->set_player_status (PLAYER_STATUS_EXIT);
     dtp_ctx->player_handle_cb ();
 
-    //free(dtp_ctx);
-    pthread_exit (NULL);
     return NULL;
 }

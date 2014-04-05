@@ -198,8 +198,7 @@ static void *audio_output_loop (void *args)
         wlen = 0;
     }
   EXIT:
-    dt_info (LOG_TAG, "[file:%s][%s:%d]ao playback thread exit\n", __FILE__, __FUNCTION__, __LINE__);
-    pthread_exit (NULL);
+    dt_info (LOG_TAG, "[%s:%d]ao playback thread exit\n", __FUNCTION__, __LINE__);
     return NULL;
 
 }

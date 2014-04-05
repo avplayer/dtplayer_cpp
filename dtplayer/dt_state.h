@@ -5,7 +5,7 @@
 
 typedef struct
 {
-    int size;
+    int size; //pkt num, in use
     int data_len;
     int free_len;
     int total_len;

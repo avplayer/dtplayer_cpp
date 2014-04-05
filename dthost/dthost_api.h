@@ -63,6 +63,8 @@ typedef struct
 {
     int abuf_level;
     int vbuf_level;
+	int apkt_size;
+    int vpkt_size;
 
     int adec_err_cnt;
     int vdec_err_cnt;

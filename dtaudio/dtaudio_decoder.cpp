@@ -23,7 +23,7 @@ void adec_register_all ()
 {
     /*Register all audio_decoder */
 #ifdef ENABLE_ADEC_FAAD
-    REGISTER_ADEC (FAAD, faad);
+    //REGISTER_ADEC (FAAD, faad);
 #endif
 
 #ifdef ENABLE_ADEC_FFMPEG
@@ -251,7 +251,6 @@ static void *audio_decode_loop (void *arg)
     if(pinfo->outptr)
         free(pinfo->outptr);
     pinfo->outlen = pinfo->outsize = 0;
-    pthread_exit (NULL);
     return NULL;
 }
 
@@ -277,7 +276,13 @@ dtaudio_decoder::dtaudio_decoder(dtaudio_para_t& para)
 	aparam.audio_filter = para.audio_filter;
 	aparam.audio_output = para.audio_output;
 	aparam.avctx_priv = para.avctx_priv;
-	
+
+    this->pts_first = -1;
+    this->pts_buffer_size = 0;
+    this->pts_cache_size = 0;
+    this->pts_current = -1;
+    this->pts_last_valid = 0;
+
 	this->status = ADEC_STATUS_IDLE;
 }
 

@@ -62,7 +62,7 @@ int dthost_init (void **host_priv, dthost_para_t * para)
     *host_priv = (void *) hctx;
     return ret;
   ERR1:
-    free (hctx);
+    delete (hctx);
   ERR0:
     return ret;
 }
