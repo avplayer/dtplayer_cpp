@@ -8,9 +8,17 @@
 #define TAG "DT-BUF"
 /*buffer ops*/
 
-int buf_init (dt_buffer_t * dbt, int size)
+dt_buffer::dt_buffer()
 {
-    uint8_t *buffer = (uint8_t *) malloc (size);
+	data = nullptr;
+	size = 0;
+}
+
+int dt_buffer::buf_init (int size)
+{
+	dt_buffer_t *dbt = this;
+	uint8_t *buffer = new uint8_t[size];
+    //uint8_t *buffer = (uint8_t *) malloc (size);
     if (!buffer)
     {
         dbt->data = NULL;
@@ -20,27 +28,28 @@ int buf_init (dt_buffer_t * dbt, int size)
     dbt->size = size;
     dbt->level = 0;
     dbt->rd_ptr = dbt->wr_ptr = dbt->data;
-	dt_lock_init(&dbt->mutex,NULL);
     dt_info (TAG, "DTBUF INIT OK\n");
     return 0;
 }
 
-int buf_reinit (dt_buffer_t * dbt)
+int dt_buffer::buf_reinit ()
 {
-    dt_lock (&dbt->mutex);
+	dt_buffer_t *dbt = this;
+	mutex.lock();
     dbt->level = 0;
     dbt->rd_ptr = dbt->wr_ptr = dbt->data;
-    dt_unlock (&dbt->mutex);
+	mutex.unlock();
     return 0;
 }
 
-int buf_release (dt_buffer_t * dbt)
+int dt_buffer::buf_release ()
 {
-    dt_lock (&dbt->mutex);
+	dt_buffer_t *dbt = this;
+	mutex.lock();
     if (dbt->data)
-        free (dbt->data);
+		delete(dbt->data);
     dbt->size = 0;
-    dt_unlock (&dbt->mutex);
+	mutex.unlock();
     return 0;
 }
 
@@ -66,21 +75,24 @@ static int buf_full (dt_buffer_t * dbt)
     return ret;
 }
 
-int buf_space (dt_buffer_t * dbt)
+int dt_buffer::buf_space ()
 {
+	dt_buffer_t *dbt = this;
     int space = dbt->size - dbt->level;
     return space;
 }
 
-int buf_level (dt_buffer_t * dbt)
+int dt_buffer::buf_level ()
 {
+	dt_buffer_t *dbt = this;
     int lev = dbt->level;
     return lev;
 }
 
-int buf_get (dt_buffer_t * dbt, uint8_t * out, int size)
+int dt_buffer::buf_get (uint8_t * out, int size)
 {
-    dt_lock (&dbt->mutex);
+	dt_buffer_t *dbt = this;
+	mutex.lock();
     int len = -1;
     len = buf_empty (dbt);
     if (len == 1)
@@ -116,13 +128,14 @@ int buf_get (dt_buffer_t * dbt, uint8_t * out, int size)
         goto QUIT;
     }
   QUIT:
-    dt_unlock (&dbt->mutex);
+	mutex.unlock();
     return len;
 }
 
-int buf_put (dt_buffer_t * dbt, uint8_t * in, int size)
+int dt_buffer::buf_put (uint8_t * in, int size)
 {
-    dt_lock (&dbt->mutex);
+	dt_buffer_t *dbt = this;
+	mutex.lock();
     int len = buf_full (dbt);
     if (len == 1)
     {
@@ -157,6 +170,6 @@ int buf_put (dt_buffer_t * dbt, uint8_t * in, int size)
         goto QUIT;
     }
   QUIT:
-    dt_unlock (&dbt->mutex);
+	mutex.unlock();
     return len;
 }

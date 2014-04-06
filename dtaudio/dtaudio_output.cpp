@@ -18,6 +18,8 @@ static void register_ao (const ao_wrapper_t & ao)
 	ao_wrappers.push_back(ao);
 }
 
+uint8_t *in = new uint8_t;
+
 void aout_register_all ()
 {
     /*Register all audio_output */

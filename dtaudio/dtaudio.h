@@ -45,7 +45,7 @@ typedef struct dtaudio_context
     dtaudio_ctrl_t audio_ctrl;
     /*buf */
     //dt_packet_list_t *audio_pack_list;
-    dt_buffer_t audio_decoded_buf;
+    dt_buffer_t *audio_decoded_buf;
     dt_buffer_t audio_filtered_buf;
     /*module */
     dtaudio_decoder_t *audio_dec;

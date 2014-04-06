@@ -79,6 +79,7 @@ dtdemuxer_context::dtdemuxer_context(dtdemuxer_para_t& _para)
 	demuxer = nullptr;
 	stream_priv = nullptr;
 	parent = nullptr;
+	probe_buf = nullptr;
 }
 
 int dtdemuxer_context::demuxer_open ()
@@ -118,13 +119,15 @@ int dtdemuxer_context::demuxer_open ()
     {
         int64_t old_pos = dtstream_tell(this->stream_priv);
         dt_info(TAG,"old:%lld \n",old_pos);
-        ret = buf_init(&this->probe_buf,PROBE_BUF_SIZE);
+		probe_buf = new dt_buffer;
+        ret = probe_buf->buf_init(PROBE_BUF_SIZE);
         if(ret < 0)
             return -1; 
-        ret = dtstream_read(this->stream_priv,this->probe_buf.data,probe_size); 
+		dt_info(TAG," buf init ok \n");
+        ret = dtstream_read(this->stream_priv,this->probe_buf->data,probe_size); 
         if(ret <= 0)
             return -1;
-        this->probe_buf.level = ret;
+        this->probe_buf->level = ret;
         ret = dtstream_seek(this->stream_priv,old_pos,SEEK_SET); 
         dt_info(TAG,"seek back to:%lld ret:%d \n",old_pos,ret);
     }
@@ -200,7 +203,11 @@ int dtdemuxer_context::demuxer_close ()
             info->sstreams[i] = NULL;
         }
     /* release probe buf */
-    buf_release(&this->probe_buf);
+	if(probe_buf)
+	{
+		probe_buf->buf_release();
+		delete(probe_buf);
+	}
     /* close stream */
     dtstream_close(this->stream_priv);
     return 0;

@@ -13,7 +13,7 @@ void audio_register_all()
 int audio_output_read (void *priv, uint8_t * buf, int size)
 {
     dtaudio_context_t *actx = (dtaudio_context_t *) priv;
-    return buf_get (&actx->audio_decoded_buf, buf, size);
+    return actx->audio_decoded_buf->buf_get (buf, size);
 }
 
 //calc cur pts
@@ -176,7 +176,7 @@ int dtaudio_context::audio_get_out_closed ()
     //get output buffer level
 	output_level = actx->audio_out->audio_output_get_level();
     //get decoder buffer level
-    decoder_level = actx->audio_decoded_buf.level;
+    decoder_level = actx->audio_decoded_buf->level;
     total = decoder_level + output_level;
     dt_info (TAG, "[%s:%d] decode_level:%d output_level:%d total:%d \n", __FUNCTION__, __LINE__, decoder_level, output_level, total);
     default_level = actx->audio_param.samplerate * actx->audio_param.bps * actx->audio_param.channels / 8;

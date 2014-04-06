@@ -46,7 +46,7 @@ typedef struct dtdemuxer_context
 	dtdemuxer_para_t para;
     dt_media_info_t media_info;
     demuxer_wrapper_t *demuxer;
-    dt_buffer_t probe_buf;    
+    dt_buffer_t *probe_buf;    
     void *stream_priv;
     void *parent;
 	

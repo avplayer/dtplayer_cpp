@@ -7,18 +7,19 @@
 
 #define SDL_AUDIO_BUFFER_SIZE 1024
 
-typedef struct{
+typedef struct sdl_ao_ctx
+{
     SDL_AudioSpec wanted;     // config audio
-    dt_buffer_t dbt;
+    dt_buffer_t *dbt;
 }sdl_ao_ctx_t;
 
 static void sdl2_cb(void *userdata,uint8_t *buf,int size)
 {
     ao_wrapper_t *wrapper = (ao_wrapper_t *)userdata;
     sdl_ao_ctx_t *ctx = (sdl_ao_ctx_t *)wrapper->ao_priv;
-    if(buf_level(&ctx->dbt) < size)
+    if(ctx->dbt->buf_level() < size)
         return;
-    buf_get(&ctx->dbt,buf,size);
+    ctx->dbt->buf_get(buf,size);
     return;
 }
 
@@ -30,14 +31,9 @@ static int ao_sdl2_init (ao_wrapper_t *wrapper, void *parent)
     dtaudio_output_t *ao = (dtaudio_output_t *)parent;
     dtaudio_para_t *ppara = &ao->para;
     wrapper->parent = parent;
-    sdl_ao_ctx_t *ctx = (sdl_ao_ctx_t*)malloc(sizeof(*ctx));
-    if(!ctx)
-    {
-        dt_info(TAG,"SDL CTX MALLOC FAILED \n");
-        return -1;
-    }
-    memset(ctx,0,sizeof(*ctx));
-    if(buf_init(&ctx->dbt,ppara->dst_samplerate * 4 / 10) < 0) // 100ms
+	sdl_ao_ctx_t *ctx = new sdl_ao_ctx;
+	ctx->dbt = new dt_buffer;
+    if(ctx->dbt->buf_init(ppara->dst_samplerate * 4 / 10) < 0) // 100ms
     {
         ret = -1;
         goto FAIL;
@@ -60,7 +56,7 @@ static int ao_sdl2_init (ao_wrapper_t *wrapper, void *parent)
 
     if (SDL_OpenAudio(pwanted, NULL)<0)      // open audio device
     {
-        printf("can't open audio.\n");
+        dt_error(TAG,"can't open audio.\n");
         ret = -1;
         goto FAIL;
     }
@@ -68,7 +64,8 @@ static int ao_sdl2_init (ao_wrapper_t *wrapper, void *parent)
     dt_info(TAG,"SDL2 AO Init OK\n"); 
     return 0;
 FAIL:
-    buf_release(&ctx->dbt);
+    ctx->dbt->buf_release();
+	delete(ctx->dbt);
     free(ctx);
     wrapper->ao_priv = NULL;
     return ret;
@@ -77,7 +74,7 @@ FAIL:
 static int ao_sdl2_play (ao_wrapper_t *wrapper, uint8_t * buf, int size)
 {
     sdl_ao_ctx_t *ctx = (sdl_ao_ctx_t *)wrapper->ao_priv;
-    return buf_put(&ctx->dbt,buf,size);
+    return ctx->dbt->buf_put(buf,size);
 }
 
 static int ao_sdl2_pause (ao_wrapper_t *wrapper)
@@ -95,7 +92,7 @@ static int ao_sdl2_resume (ao_wrapper_t *wrapper)
 static int ao_sdl2_level(ao_wrapper_t *wrapper)
 {
     sdl_ao_ctx_t *ctx = (sdl_ao_ctx_t *)wrapper->ao_priv;
-    return ctx->dbt.level;
+    return ctx->dbt->level;
 }
 
 static int64_t ao_sdl2_get_latency (ao_wrapper_t *wrapper)
@@ -103,7 +100,7 @@ static int64_t ao_sdl2_get_latency (ao_wrapper_t *wrapper)
     sdl_ao_ctx_t *ctx = (sdl_ao_ctx_t *)wrapper->ao_priv;
     dtaudio_output_t *ao = (dtaudio_output_t *)wrapper->parent;
     
-    int level = buf_level(&ctx->dbt);
+    int level = ctx->dbt->buf_level();
     unsigned int sample_num;
     uint64_t latency;
     float pts_ratio = 0.0;
@@ -119,7 +116,8 @@ static int ao_sdl2_stop (ao_wrapper_t * wrapper)
     {
         sdl_ao_ctx_t *ctx = (sdl_ao_ctx_t *)wrapper->ao_priv;
         SDL_CloseAudio();
-        buf_release(&ctx->dbt);
+        ctx->dbt->buf_release();
+		delete(ctx->dbt);
         free(ctx);
         wrapper->ao_priv = NULL;
         SDL_QuitSubSystem(SDL_INIT_AUDIO);

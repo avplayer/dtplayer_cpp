@@ -119,7 +119,9 @@ static int demuxer_aac_probe(demuxer_wrapper_t *wrapper, void *parent)
 {
     dtdemuxer_context_t *ctx = (dtdemuxer_context_t *)parent;
     wrapper->parent = parent;
-    dt_buffer_t *probe_buf = &ctx->probe_buf; 
+    dt_buffer_t *probe_buf = ctx->probe_buf;
+	if(!probe_buf)
+		return 0;
     int score;
     int max_frames = 0, first_frames = 0;
     int fsize, frames;
@@ -166,7 +168,7 @@ static int estimate_duration(demuxer_wrapper_t *wrapper)
 {
     aac_ctx_t *aac_ctx = (aac_ctx_t *)wrapper->demuxer_priv;
     dtdemuxer_context_t *ctx = (dtdemuxer_context_t *)wrapper->parent;
-    dt_buffer_t *probe_buf = &ctx->probe_buf; 
+    dt_buffer_t *probe_buf = ctx->probe_buf; 
     const uint8_t *buf = probe_buf->data;
     const uint8_t *buf2 = buf;
     const uint8_t *end = buf + probe_buf->level - 7;
@@ -229,7 +231,7 @@ static int demuxer_aac_open(demuxer_wrapper_t *wrapper)
     memset(aac_ctx,0,sizeof(aac_ctx_t));
     wrapper->demuxer_priv = (void *)aac_ctx;
     dtdemuxer_context_t *ctx = (dtdemuxer_context_t *)wrapper->parent;
-    dt_buffer_t *probe_buf = &ctx->probe_buf; 
+    dt_buffer_t *probe_buf = ctx->probe_buf; 
     const uint8_t *buf = probe_buf->data;
     //const uint8_t *end = buf + probe_buf->level - 7;
     uint32_t header = DT_RB16(buf);

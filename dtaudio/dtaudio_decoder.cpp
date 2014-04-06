@@ -23,7 +23,7 @@ void adec_register_all ()
 {
     /*Register all audio_decoder */
 #ifdef ENABLE_ADEC_FAAD
-    //REGISTER_ADEC (FAAD, faad);
+    REGISTER_ADEC (FAAD, faad);
 #endif
 
 #ifdef ENABLE_ADEC_FFMPEG
@@ -69,7 +69,7 @@ static void *audio_decode_loop (void *arg)
     dt_av_frame_t frame;
     dec_audio_wrapper_t *dec_wrapper = decoder->dec_wrapper;
     dtaudio_context_t *actx = (dtaudio_context_t *) decoder->parent;
-    dt_buffer_t *out = &actx->audio_decoded_buf;
+    dt_buffer_t *out = actx->audio_decoded_buf;
     int declen, fill_size;
     
     //for some type audio, can not read completly frame 
@@ -228,13 +228,13 @@ static void *audio_decode_loop (void *arg)
         if (decoder->status == ADEC_STATUS_EXIT)
             goto EXIT;
         /*write pcm */
-        if (buf_space (out) < pinfo->outlen)
+        if (out->buf_space () < pinfo->outlen)
         {
-            dt_debug (TAG, "[%s:%d] output buffer do not left enough space ,space=%d level:%d outsie:%d \n", __FUNCTION__, __LINE__, buf_space (out), buf_level (out), pinfo->outlen);
+            dt_debug (TAG, "[%s:%d] output buffer do not left enough space ,space=%d level:%d outsie:%d \n", __FUNCTION__, __LINE__, out->buf_space (), out->buf_level (), pinfo->outlen);
             usleep (1000 * 10);
             goto REFILL_BUFFER;
         }
-        ret = buf_put (out, pinfo->outptr + fill_size, pinfo->outlen);
+        ret = out->buf_put (pinfo->outptr + fill_size, pinfo->outlen);
         fill_size += ret;
         pinfo->outlen -= ret;
         decoder->pts_cache_size = pinfo->outlen;
@@ -319,7 +319,8 @@ int dtaudio_decoder::audio_decoder_init ()
     /*init pcm buffer */
     actx = (dtaudio_context_t *) decoder->parent;
     size = DTAUDIO_PCM_BUF_SIZE;
-    ret = buf_init (&actx->audio_decoded_buf, size);
+	actx->audio_decoded_buf = new dt_buffer;
+	ret = actx->audio_decoded_buf->buf_init(size);
     if (ret < 0)
     {
         ret = -1;
@@ -330,7 +331,8 @@ int dtaudio_decoder::audio_decoder_init ()
 	decoder->audio_decoder_start();
     return ret;
   ERR2:
-    buf_release (&actx->audio_decoded_buf);
+  actx->audio_decoded_buf->buf_release();
+  delete(actx->audio_decoded_buf);
   ERR1:
     wrapper->release (wrapper);
   ERR0:
@@ -352,7 +354,8 @@ int dtaudio_decoder::audio_decoder_stop ()
     wrapper->release (wrapper);
     /*uninit buf */
     dtaudio_context_t *actx = (dtaudio_context_t *) this->parent;
-    buf_release (&actx->audio_decoded_buf);
+	actx->audio_decoded_buf->buf_release();
+	delete(actx->audio_decoded_buf);
 	dt_info(TAG,"ad stop ok\n");
     return 0;
 }
@@ -368,7 +371,7 @@ int64_t dtaudio_decoder::audio_decoder_get_pts ()
     int len;
     float pts_ratio;
     dtaudio_context_t *actx = (dtaudio_context_t *) this->parent;
-    dt_buffer_t *out = &actx->audio_decoded_buf;
+    dt_buffer_t *out = actx->audio_decoded_buf;
 
     if (this->status == ADEC_STATUS_IDLE || this->status == ADEC_STATUS_EXIT)
         return -1;
