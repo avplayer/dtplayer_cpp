@@ -1,11 +1,9 @@
 #ifndef DT_EVENT_H
 #define DT_EVENT_H
 
-#include "dt_lock.h"
-
 #include <thread>
 
-typedef struct event
+typedef struct _event
 {
     int type;
     union
@@ -13,7 +11,7 @@ typedef struct event
         int np;
     } para;
     int server_id;
-    struct event *next;
+    struct _event *next;
 } event_t;
 
 typedef struct event_server
@@ -21,7 +19,7 @@ typedef struct event_server
     char name[1024];
     int id;
     event_t *event;
-    dt_lock_t event_lock;
+	std::mutex mux_event;
     int event_count;
     struct event_server *next;
 } event_server_t;
@@ -29,10 +27,11 @@ typedef struct event_server
 typedef struct event_server_mgt
 {
     event_server_t *server;
-    dt_lock_t server_lock;
+	std::mutex mux_server;
     int server_count;
     int exit_flag;
     std::thread transport_loop_thread;
+	
 } dt_server_mgt_t;
 
 int dt_event_server_init ();

@@ -36,14 +36,12 @@ int dt_event_server_init ()
     server_mgt.server = NULL;
     server_mgt.server_count = 0;
     server_mgt.exit_flag = 0;
-    dt_lock_init (&server_mgt.server_lock, NULL);
 
     main_server.id = EVENT_SERVER_MAIN;
     strcpy (main_server.name, "SERVER-MAIN");
     main_server.event_count = 0;
     main_server.event = NULL;
     main_server.next = NULL;
-    dt_lock_init (&main_server.event_lock, NULL);
 
     ret = dt_register_server (&main_server);
     if (ret < 0)
@@ -64,7 +62,7 @@ int dt_event_server_init ()
 int dt_event_server_release ()
 {
     dt_server_mgt_t *mgt = &server_mgt;
-    dt_lock (&mgt->server_lock);
+	mgt->mux_server.lock();
 
     /*stop loop */
     mgt->exit_flag = 1;
@@ -82,20 +80,19 @@ int dt_event_server_release ()
         entry = entry_next;
     }
 
-    dt_unlock (&mgt->server_lock);
+	mgt->mux_server.unlock();
     return 0;
 }
 
 event_server_t *dt_alloc_server ()
 {
-    event_server_t *server = (event_server_t *) malloc (sizeof (event_server_t));
+	event_server_t *server = new event_server;
     if (server)
     {
         server->event = NULL;
         server->event_count = 0;
         server->id = -1;
         server->next = NULL;
-        dt_lock_init (&server->event_lock, NULL);
     }
     else
         server = NULL;
@@ -112,7 +109,7 @@ int dt_register_server (event_server_t * server)
         dt_error (TAG, "SERVICE MGT IS NULL\n");
         return -1;
     }
-    dt_lock (&mgt->server_lock);
+	mgt->mux_server.lock();
     if (mgt->server_count == 0)
         mgt->server = server;
     event_server_t *entry = mgt->server;
@@ -132,12 +129,12 @@ int dt_register_server (event_server_t * server)
         server->next = NULL;
         mgt->server_count++;
     }
-    dt_unlock (&mgt->server_lock);
+	mgt->mux_server.unlock();
     dt_info (TAG, "SERVICE:%s REGISTER OK,SERVERCOUNT:%d \n", server->name, mgt->server_count);
     return 0;
 
   FAIL:
-    dt_unlock (&mgt->server_lock);
+	mgt->mux_server.unlock();
     return ret;
 
 }
@@ -163,10 +160,10 @@ int dt_remove_server (event_server_t * server)
 
     while (event)
     {
-        free (event);
-        server->event_count--;
-        event = event_next;
-        if (event)
+	    delete(event);
+		server->event_count--;
+		event = event_next;
+		if (event)
             event_next = event->next;
     }
 
@@ -185,13 +182,13 @@ int dt_remove_server (event_server_t * server)
     if (server->event_count > 0)
         dt_warning (TAG, "EVENT COUNT !=0 AFTER REMOVE \n");
     if (server->id != EVENT_SERVER_MAIN)
-        free (server);
+		delete(server);
     return 0;
 }
 
 event_t *dt_alloc_event ()
 {
-    event_t *event = (event_t *) malloc (sizeof (event_t));
+	event_t *event = new _event;
     if (!event)
     {
         dt_error (TAG, "EVENT ALLOC FAILED \n");
@@ -212,7 +209,7 @@ int dt_send_event (event_t * event)
         dt_error (TAG, "EVENT SEND FAILED \n");
         return -1;
     }
-    dt_lock (&server_hub->event_lock);
+	server_hub->mux_event.lock();
     if (server_hub->event_count == 0)
         server_hub->event = event;
     else
@@ -224,7 +221,7 @@ int dt_send_event (event_t * event)
 
     }
     server_hub->event_count++;
-    dt_unlock (&server_hub->event_lock);
+	server_hub->mux_event.unlock();
     dt_debug (TAG, "EVENT:%d SEND OK, event count:%d \n", event->type, server_hub->event_count);
     return 0;
 }
@@ -237,7 +234,7 @@ int dt_add_event (event_t * event, event_server_t * server)
         dt_error (TAG, "EVENT SEND FAILED \n");
         return -1;
     }
-    dt_lock (&server_hub->event_lock);
+	server_hub->mux_event.lock();
     if (server_hub->event_count == 0)
         server_hub->event = event;
     else
@@ -249,14 +246,14 @@ int dt_add_event (event_t * event, event_server_t * server)
 
     }
     server_hub->event_count++;
-    dt_unlock (&server_hub->event_lock);
+	server_hub->mux_event.unlock();
     return 0;
 }
 
 event_t *dt_get_event (event_server_t * server)
 {
     event_t *entry = NULL;
-    dt_lock (&server->event_lock);
+	server->mux_event.lock();
     if (server->event_count > 0)
     {
         entry = server->event;
@@ -264,7 +261,7 @@ event_t *dt_get_event (event_server_t * server)
         server->event_count--;
         entry->next = NULL;
     }
-    dt_unlock (&server->event_lock);
+    server->mux_event.unlock();
     if (entry != NULL)
         dt_info (TAG, "GET EVENT:%d From Server:%s \n", entry->type, server->name);
     return entry;
@@ -272,7 +269,7 @@ event_t *dt_get_event (event_server_t * server)
 
 static int dt_transport_event (event_t * event, dt_server_mgt_t * mgt)
 {
-    dt_lock (&mgt->server_lock);
+	mgt->mux_server.lock();
     event_server_t *entry = mgt->server;
 
     int ret = 0;
@@ -298,10 +295,10 @@ static int dt_transport_event (event_t * event, dt_server_mgt_t * mgt)
         ret = -1;
         goto FAIL;
     }
-    dt_unlock (&mgt->server_lock);
+    mgt->mux_server.unlock();
     return ret;
   FAIL:
-    dt_unlock (&mgt->server_lock);
+	mgt->mux_server.unlock();
     return ret;
 }
 
