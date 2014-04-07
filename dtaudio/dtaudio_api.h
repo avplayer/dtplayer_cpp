@@ -4,8 +4,13 @@
 #include "dt_state.h"
 #include <stdint.h>
 
+#include <functional>
+
 #define AUDIO_EXTRADATA_SIZE 4096
-typedef struct
+
+class dthost;
+
+typedef struct dtaudio_para
 {
     int channels,dst_channels;
     int samplerate,dst_samplerate;
@@ -17,18 +22,25 @@ typedef struct
     int afmt;
     int audio_filter;
     int audio_output;
-    void *avctx_priv;           //point to avcodec_context
+    void *avctx_priv;           //point to avcodec_context    
 } dtaudio_para_t;
 
-int dtaudio_init (void **audio_priv, dtaudio_para_t * para, void *parent);
-int dtaudio_start (void *audio_priv);
-int dtaudio_pause (void *audio_priv);
-int dtaudio_resume (void *audio_priv);
-int dtaudio_stop (void *audio_priv);
-int64_t dtaudio_get_pts (void *audio_priv);
-int dtaudio_drop (void *audio_priv, int64_t target_pts);
-int64_t dtaudio_get_first_pts (void *audio_priv);
-int dtaudio_get_state (void *audio_priv, dec_state_t * dec_state);
-int dtaudio_get_out_closed (void *audio_priv);
+class dtaudio
+{
+public:
+	dtaudio();
+	std::function<int (dtaudio_para_t *para, dthost *host)>init;
+	std::function<int ()>start;
+	std::function<int ()>pause;
+	std::function<int ()>resume;
+	std::function<int ()>stop;
+	std::function<int ()>get_pts;
+	std::function<int (void *priv,int64_t target)>drop;
+	std::function<int ()>get_first_pts;
+	std::function<int (dec_state_t * dec_state)>get_state;
+	std::function<int ()>get_out_closed;
+};
+
+dtaudio * open_audio_module();
 
 #endif

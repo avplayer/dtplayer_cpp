@@ -75,6 +75,12 @@ typedef struct
 
 } host_state_t;
 
+class dthost
+{
+public:
+	dthost();
+};
+
 int dthost_start (void *host_priv);
 int dthost_pause (void *host_priv);
 int dthost_resume (void *host_priv);

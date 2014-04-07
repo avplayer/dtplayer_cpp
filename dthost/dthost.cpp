@@ -61,6 +61,8 @@ dthost_context::dthost_context(dthost_para_t &_para)
 	para.video_ratio = _para.video_ratio;
 	
 	para.vctx_priv = _para.vctx_priv;
+	
+	mod_audio = nullptr;
 }
 
 
@@ -436,8 +438,10 @@ int dthost_context::host_init ()
         audio_para.audio_filter = host_para->audio_filter;
         audio_para.audio_output = host_para->audio_output;
         audio_para.avctx_priv = host_para->actx_priv;
-
-        ret = dtaudio_init (&this->audio_priv, &audio_para, this);
+		
+		mod_audio = open_audio_module();
+		ret = mod_audio->init(&audio_para,this);		
+        //ret = dtaudio_init (&this->audio_priv, &audio_para, this);
         if (ret < 0)
             goto ERR2;
         dt_info (TAG, "[%s:%d]dtaudio init success \n", __FUNCTION__, __LINE__);

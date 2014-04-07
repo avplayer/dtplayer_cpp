@@ -3,6 +3,47 @@
 
 #define TAG "AUDIO-API"
 
+
+
+class module_audio
+{
+	dtaudio_context_t *actx;
+	dthost *host;
+public:
+	module_audio();
+	int dtaudio_init (dtaudio_para_t * para, dthost *host);
+	int dtaudio_start ();
+	int dtaudio_pause ();
+	int dtaudio_resume ();
+	int dtaudio_stop ();
+	int64_t dtaudio_get_pts ();
+	int dtaudio_drop (module_audio *mod,int64_t target_pts);
+	int64_t dtaudio_get_first_pts ();
+	int dtaudio_get_state (dec_state_t * dec_state);
+	int dtaudio_get_out_closed ();
+};
+
+dtaudio* open_audio_module()
+{
+	dtaudio *audio = new dtaudio;
+	module_audio *mod_audio = new module_audio;
+	
+	audio->drop = std::bind(&module_audio::dtaudio_drop,mod_audio, _1);
+
+#if 0
+	audio->get_first_pts = std::bind(&mod_audio->dtaudio_get_first_pts);
+	audio->get_out_closed = std::bind(&mod_audio->dtaudio_get_out_closed);
+	audio->get_pts = std::bind(&mod_audio->dtaudio_get_pts);
+	audio->get_state = std::bind(&mod_audio->dtaudio_get_state,_1);
+	audio->init = std::bind(&mod_audio->dtaudio_init,_1,_2);
+	audio->pause = std::bind(&mod_audio->dtaudio_pause);
+	audio->resume = std::bind(&mod_audio->dtaudio_resume);
+	audio->stop = std::bind(&mod_audio->dtaudio_stop);
+#endif
+
+}
+
+
 static int audio_server_init (dtaudio_context_t * actx)
 {
     event_server_t *server = dt_alloc_server ();
@@ -27,13 +68,18 @@ static int audio_server_release (dtaudio_context_t * actx)
     return 0;
 }
 
-//==Part1:Control
-int dtaudio_init (void **audio_priv, dtaudio_para_t * para, void *parent)
+module_audio::module_audio()
+{
+	actx = nullptr;
+	host = nullptr;
+}
+
+int module_audio::dtaudio_init (dtaudio_para_t * para, dthost *_host)
 {
     int ret = 0;
 	
 	dtaudio_para_t &apara = *para;
-	dtaudio_context_t *actx = new dtaudio_context(apara);
+	actx = new dtaudio_context(apara);
 
     /*init server */
     ret = audio_server_init (actx);
@@ -43,7 +89,7 @@ int dtaudio_init (void **audio_priv, dtaudio_para_t * para, void *parent)
         return ret;
     }
     //we need to set parent early, Since enter audio decoder loop first,will crash for parent invalid
-    actx->parent = parent;
+	host = _host;
     ret = actx->audio_init();
     if (ret < 0)
     {
@@ -51,12 +97,10 @@ int dtaudio_init (void **audio_priv, dtaudio_para_t * para, void *parent)
         return ret;
     }
 
-    *audio_priv = (void *) actx;
-
     return ret;
 }
 
-int dtaudio_start (void *audio_priv)
+int module_audio::dtaudio_start ()
 {
     event_t *event = dt_alloc_event ();
     event->next = NULL;
@@ -66,7 +110,7 @@ int dtaudio_start (void *audio_priv)
     return 0;
 }
 
-int dtaudio_pause (void *audio_priv)
+int module_audio::dtaudio_pause ()
 {
     event_t *event = dt_alloc_event ();
     event->next = NULL;
@@ -76,7 +120,7 @@ int dtaudio_pause (void *audio_priv)
     return 0;
 }
 
-int dtaudio_resume (void *audio_priv)
+int module_audio::dtaudio_resume ()
 {
     event_t *event = dt_alloc_event ();
     event->next = NULL;
@@ -86,15 +130,9 @@ int dtaudio_resume (void *audio_priv)
     return 0;
 }
 
-int dtaudio_stop (void *audio_priv)
+int module_audio::dtaudio_stop ()
 {
     int ret = 0;
-    dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
-    if (!actx)
-    {
-        dt_error (TAG, "[%s:%d] dt audio context == NULL\n", __FUNCTION__, __LINE__);
-        return -1;
-    }
     event_t *event = dt_alloc_event ();
     event->next = NULL;
     event->server_id = EVENT_SERVER_AUDIO;
@@ -105,42 +143,32 @@ int dtaudio_stop (void *audio_priv)
 
     audio_server_release (actx);
     delete(actx);
-    audio_priv = NULL;
-
     return ret;
 }
 
-//==Part2:PTS&STATUS Relative
-int64_t dtaudio_get_pts (void *audio_priv)
+int64_t module_audio::dtaudio_get_pts ()
 {
-    dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
 	return actx->audio_get_first_pts();
 }
 
-int dtaudio_drop (void *audio_priv, int64_t target_pts)
+int module_audio::dtaudio_drop (int64_t target_pts)
 {
-    dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
     return actx->audio_drop(target_pts);
 }
 
-int64_t dtaudio_get_first_pts (void *audio_priv)
+int64_t module_audio::dtaudio_get_first_pts ()
 {
-    dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
 	return actx->audio_get_first_pts();
 }
 
-int dtaudio_get_state (void *audio_priv, dec_state_t * dec_state)
+int module_audio::dtaudio_get_state (dec_state_t * dec_state)
 {
     int ret;
-    dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
 	ret = actx->audio_get_dec_state(dec_state);
     return ret;
 }
 
-int dtaudio_get_out_closed (void *audio_priv)
+int module_audio::dtaudio_get_out_closed ()
 {
-    int ret;
-    dtaudio_context_t *actx = (dtaudio_context_t *) audio_priv;
-	ret = actx->audio_get_out_closed();
-    return ret;
+	return actx->audio_get_out_closed();
 }

@@ -6,6 +6,8 @@
 
 #include <stdlib.h>
 
+class dtaudio;
+
 typedef struct dthost_context
 {
     dthost_para_t para;
@@ -21,6 +23,8 @@ typedef struct dthost_context
     void *port_priv;
     void *audio_priv;
     void *video_priv;
+	
+	dtaudio *mod_audio;
 	
 	dthost_context(dthost_para_t &_para);
 	int host_start ();
