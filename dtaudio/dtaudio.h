@@ -11,6 +11,7 @@
 #include "dtaudio_decoder.h"
 #include "dtaudio_filter.h"
 #include "dtaudio_output.h"
+#include <dthost_api.h>
 
 #include <unistd.h>
 
@@ -56,37 +57,16 @@ typedef struct dtaudio_context
     std::thread event_loop_thread;
     dtaudio_status_t audio_state;
     void *audio_server;
-    void *dtport_priv;          //data source
-    void *parent;               //dtcodec
+	module_audio *parent; //module_audio
     
 public:
 	dtaudio_context(dtaudio_para_t &para);
-#if 0
-	dtaudio_context(dtaudio_para_t &para)
-	{
-		audio_param.channels = para.channels;
-		audio_param.samplerate = para.samplerate;
-		audio_param.dst_channels = para.dst_channels;
-		audio_param.dst_samplerate = para.dst_samplerate;
-		audio_param.data_width = para.data_width;
-		audio_param.bps = para.bps;
-		audio_param.afmt = para.afmt;
-		
-		audio_param.den = para.den;
-		audio_param.num = para.num;
-		
-		audio_param.extradata_size = para.extradata_size;
-		if(para.extradata_size > 0)
-			;//audio_param.extradata = para.extradata;
-		
-		audio_param.audio_filter = para.audio_filter;
-		audio_param.audio_output = para.audio_output;
-		audio_param.avctx_priv = para.avctx_priv;
-	}
-#endif
+	void audio_update_pts ();
 	int64_t audio_get_current_pts ();
 	int64_t audio_get_first_pts ();
 	int audio_drop (int64_t target_pts);
+	int audio_output_read (uint8_t * buf, int size);
+	int audio_read_frame (dt_av_frame_t * frame);
 	
 	int audio_get_dec_state (dec_state_t * dec_state);
 	int audio_get_out_closed ();
@@ -99,8 +79,5 @@ public:
 } dtaudio_context_t;
 
 void audio_register_all();
-void audio_update_pts (void *priv);
-int audio_read_frame (void *priv, dt_av_frame_t * frame);
-int audio_output_read (void *priv, uint8_t * buf, int size);
 
 #endif

@@ -113,7 +113,7 @@ static void *audio_decode_loop (void *arg)
             dt_info (TAG, "[%s:%d] decoder parent is NULL \n", __FUNCTION__, __LINE__);
             continue;
         }
-        ret = audio_read_frame (decoder->parent, &frame);
+        ret = decoder->parent->audio_read_frame(&frame);
         if (ret < 0 || frame.size <= 0)
         {
             usleep (1000 * 10);

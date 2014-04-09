@@ -115,7 +115,7 @@ static void *video_decode_loop (void *arg)
             usleep (1000);
             continue;
         }
-        ret = dtvideo_read_frame (decoder->parent, &frame);
+        ret = vctx->dtvideo_read_frame(&frame);
         if (ret < 0)
         {
             usleep (1000);

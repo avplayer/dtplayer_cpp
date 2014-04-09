@@ -56,6 +56,8 @@ typedef struct
     int vout_buf_level;
 } vo_state_t;
 
+struct dtvideo_context;
+
 struct dtvideo_output
 {
     /*param */
@@ -66,7 +68,7 @@ struct dtvideo_output
     vo_state_t state;
 
     uint64_t last_valid_latency;
-    void *parent;               //point to dtaudio_t, can used for param of pcm get interface
+    struct dtvideo_context *parent;
     
     dtvideo_output(dtvideo_para_t &para);
 	int video_output_init (int vo_id);

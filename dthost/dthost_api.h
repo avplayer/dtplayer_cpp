@@ -78,25 +78,53 @@ typedef struct
 class dthost
 {
 public:
-	dthost();
+	dthost(){};
+	std::function<int (dthost_para_t *para)>init;
+	std::function<int ()>start;
+	std::function<int ()>pause;
+	std::function<int ()>resume;
+	std::function<int ()>stop;
+	std::function<int (dt_av_frame_t * frame, int type)>read_frame;
+	std::function<int (dt_av_frame_t * frame, int type)>write_frame;
+	std::function<int64_t ()>get_apts;
+	std::function<int (int64_t pts)>update_apts;
+	std::function<int64_t ()>get_vpts;
+	std::function<int (int64_t pts)>update_vpts;
+	std::function<int64_t ()>get_systime;
+	std::function<int (int64_t pts)>update_systime;
+	std::function<int ()>get_avdiff;
+	std::function<int ()>get_current_time;
+	std::function<int (host_state_t * state)>get_state;
+	std::function<int ()>get_out_closed;
 };
 
-int dthost_start (void *host_priv);
-int dthost_pause (void *host_priv);
-int dthost_resume (void *host_priv);
-int dthost_stop (void *host_priv);
-int dthost_init (void **host_priv, dthost_para_t * para);
-int dthost_read_frame (void *host_priv, dt_av_frame_t * frame, int type);
-int dthost_write_frame (void *host_priv, dt_av_frame_t * frame, int type);
-int64_t dthost_get_apts (void *host_priv);
-int64_t dthost_update_apts (void *host_priv, int64_t pts);
-int64_t dthost_get_vpts (void *host_priv);
-void dthost_update_vpts (void *host_priv, int64_t vpts);
-int dthost_get_avdiff (void *host_priv);
-int64_t dthost_get_current_time (void *host_priv);
-int64_t dthost_get_systime (void *host_priv);
-void dthost_update_systime (void *host_priv, int64_t systime);
-int dthost_get_state (void *host_priv, host_state_t * state);
-int dthost_get_out_closed (void *host_priv);
+struct dthost_context;
+
+class module_host
+{
+public:	
+	dthost *host_ext;
+	struct dthost_context *hctx;
+	module_host();
+	int dthost_start ();
+	int dthost_pause ();
+	int dthost_resume ();
+	int dthost_stop ();
+	int dthost_init (dthost_para_t * para);
+	int dthost_read_frame (dt_av_frame_t * frame, int type);
+	int dthost_write_frame (dt_av_frame_t * frame, int type);
+	int64_t dthost_get_apts ();
+	int dthost_update_apts (int64_t apts);
+	int64_t dthost_get_vpts ();
+	int dthost_update_vpts (int64_t vpts);
+	int64_t dthost_get_avdiff ();
+	int64_t dthost_get_current_time ();
+	int64_t dthost_get_systime ();
+	int dthost_update_systime (int64_t systime);
+	int dthost_get_state (host_state_t * state);
+	int dthost_get_out_closed ();
+};
+
+dthost *open_host_module();
 
 #endif

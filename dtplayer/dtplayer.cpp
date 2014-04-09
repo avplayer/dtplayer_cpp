@@ -112,7 +112,8 @@ void dtplayer_context::player_update_state ()
     host_state_t host_state;
 
     /*update host state */
-    dthost_get_state (this->host_priv, &host_state);
+	dthost *host = this->host_ext;
+    host->get_state (&host_state);
 
     /*calc cur time */
     this->calc_cur_time (&host_state);
@@ -389,7 +390,7 @@ static void *event_handle_loop (dtplayer_context_t * dtp_ctx)
         dtp_ctx->player_handle_cb ();
         if (!dtp_ctx->ctrl_info.eof_flag)
             continue;
-        if (dthost_get_out_closed (dtp_ctx->host_priv) == 1)
+        if (dtp_ctx->host_ext->get_out_closed() == 1)
             goto QUIT;
     }
     /* when playend itself ,we need to release manually */

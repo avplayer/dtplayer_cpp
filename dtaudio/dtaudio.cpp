@@ -10,10 +10,9 @@ void audio_register_all()
 }
 
 /*ao read pcm from decoder buf*/
-int audio_output_read (void *priv, uint8_t * buf, int size)
+int dtaudio_context::audio_output_read (uint8_t * buf, int size)
 {
-    dtaudio_context_t *actx = (dtaudio_context_t *) priv;
-    return actx->audio_decoded_buf->buf_get (buf, size);
+    return this->audio_decoded_buf->buf_get (buf, size);
 }
 
 //calc cur pts
@@ -37,10 +36,12 @@ int64_t dtaudio_context::audio_get_current_pts ()
 }
 
 /*$ update dtcore audio pts*/
-void audio_update_pts (void *priv)
+void dtaudio_context::audio_update_pts ()
 {
     int64_t pts, delay_pts;
-    dtaudio_context_t *actx = (dtaudio_context_t *) priv;
+	dtaudio_context_t *actx = this;
+	module_audio *audio_ext = this->parent;
+	dthost *host = audio_ext->host_ext;
     if (actx->audio_state < AUDIO_STATUS_INITED)
         return;
 	pts = actx->audio_dec->audio_decoder_get_pts();
@@ -54,18 +55,17 @@ void audio_update_pts (void *priv)
         pts -= delay_pts;
     else
         pts = 0;
-    dthost_update_apts (actx->parent, pts);
+	host->update_apts(pts);
     return;
 }
 
 /*read frame from dtport*/
-int audio_read_frame (void *priv, dt_av_frame_t * frame)
+int dtaudio_context::audio_read_frame (dt_av_frame_t * frame)
 {
     int type = DT_TYPE_AUDIO;
-    int ret = 0;
-    dtaudio_context_t *actx = (dtaudio_context_t *) priv;
-    ret = dthost_read_frame (actx->parent, frame, type);
-    return ret;
+	module_audio *audio_ext = this->parent;
+	dthost *host = audio_ext->host_ext;
+	return host->read_frame(frame,type);
 }
 
 dtaudio_context::dtaudio_context(dtaudio_para_t &para)
@@ -130,7 +130,7 @@ int dtaudio_context::audio_drop (int64_t target_pts)
     int64_t pts = -1;
     while (size > 0)
     {
-        rlen = audio_output_read ((void *) actx, buf, (size > read_size_once) ? read_size_once : size);
+		rlen = actx->audio_output_read(buf, (size > read_size_once) ? read_size_once : size);
         if (rlen == -1)
         {
             if (drop_count-- == 0)
@@ -146,7 +146,7 @@ int dtaudio_context::audio_drop (int64_t target_pts)
             break;
         dt_debug (TAG, "read :%d pcm left:%d pts:%lld \n", rlen, size, pts);
     }
-    audio_update_pts ((void *) actx);
+	actx->audio_update_pts();
     dt_info (TAG, "drop finish,size:%d left. \n", size);
     return 0;
 }
@@ -317,6 +317,7 @@ int dtaudio_context::audio_init ()
     int ret = 0;
     dt_info (DTAUDIO_LOG_TAG, "[%s:%d] audio init start\n", __FUNCTION__, __LINE__);
 	dtaudio_context_t * actx = this;
+	this->parent = parent;
     actx->audio_state = AUDIO_STATUS_INITING;
 	dtaudio_decoder_t *audio_dec = nullptr;
 	dtaudio_output_t *audio_out = nullptr;

@@ -2,6 +2,7 @@
 #define DT_EVENT_H
 
 #include <thread>
+#include <mutex>
 
 typedef struct _event
 {

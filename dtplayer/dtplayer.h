@@ -53,6 +53,7 @@ typedef struct dtplayer_context
     player_ctrl_t ctrl_info;
     dthost_para_t host_para;
     void *host_priv;
+	dthost *host_ext;
 
     player_state_t state;
     int (*update_cb) (player_state_t * state); // update player info to uplevel

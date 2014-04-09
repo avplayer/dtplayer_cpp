@@ -4,7 +4,12 @@
 #include "dt_state.h"
 #include <stdint.h>
 
+#include <functional>
+
 #define VIDEO_EXTRADATA_SIZE 4096
+
+class dthost;
+
 typedef struct
 {
     int vfmt;
@@ -25,15 +30,43 @@ typedef struct
     void *avctx_priv;
 } dtvideo_para_t;
 
-int dtvideo_init (void **video_priv, dtvideo_para_t * para, void *parent);
-int dtvideo_start (void *video_priv);
-int dtvideo_pause (void *video_priv);
-int dtvideo_resume (void *video_priv);
-int dtvideo_stop (void *video_priv);
-int64_t dtvideo_external_get_pts (void *video_priv);
-int64_t dtvideo_get_first_pts (void *video_priv);
-int dtvideo_drop (void *video_priv, int64_t target_pts);
-int dtvideo_get_state (void *video_priv, dec_state_t * dec_state);
-int dtvideo_get_out_closed (void *video_priv);
+class dtvideo
+{
+public:
+	dtvideo(){};
+	std::function<int (dtvideo_para_t * para, dthost *host)>init;
+	std::function<int ()>start;
+	std::function<int ()>pause;
+	std::function<int ()>resume;
+	std::function<int ()>stop;
+	std::function<int ()>get_pts;
+	std::function<int (int64_t target)>drop;
+	std::function<int ()>get_first_pts;
+	std::function<int (dec_state_t * dec_state)>get_state;
+	std::function<int ()>get_out_closed;
+};
+
+struct dtvideo_context;
+
+class module_video
+{
+public:
+	dtvideo *video_ext;
+	struct dtvideo_context *vctx;
+	dthost *host_ext;
+	int dtvideo_init (dtvideo_para_t * para, dthost *host);
+	int dtvideo_start ();
+	int dtvideo_pause ();
+	int dtvideo_resume ();
+	int dtvideo_stop ();
+	int64_t dtvideo_get_pts ();
+	int64_t dtvideo_get_first_pts ();
+	int dtvideo_drop (int64_t target_pts);
+	int dtvideo_get_state (dec_state_t * dec_state);
+	int dtvideo_get_out_closed ();
+};
+
+dtvideo *open_video_module();
+
 
 #endif

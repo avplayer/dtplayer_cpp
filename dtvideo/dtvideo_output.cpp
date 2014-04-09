@@ -156,7 +156,7 @@ static void *video_output_loop (void *args)
             continue;
         }
         /*pre read picture and update sys time */
-        picture_pre = (AVPicture_t *) dtvideo_output_pre_read (vo->parent);
+        picture_pre = (AVPicture_t *) vo->parent->dtvideo_output_pre_read ();
         if (!picture_pre)
         {
             dt_debug (TAG, "[%s:%d]frame read failed ! \n", __FUNCTION__, __LINE__);
@@ -164,7 +164,7 @@ static void *video_output_loop (void *args)
             continue;
         }
         cur_time = (int64_t) dt_gettime ();
-        sys_clock = dtvideo_get_systime (vo->parent);
+		sys_clock = vo->parent->dtvideo_get_systime();
         if (sys_clock == -1)
         {
             dt_info (TAG, "FIRST SYSCLOK:%lld \n", picture_pre->pts);
@@ -179,7 +179,7 @@ static void *video_output_loop (void *args)
         if (picture_pre->pts == -1) //invalid pts, calc using last pts
             picture_pre->pts = vctx->current_pts + 90000 / vo->para.fps;
         //update sys time
-        dtvideo_update_systime (vo->parent, sys_clock);
+		vo->parent->dtvideo_update_systime(sys_clock);
         //maybe need to block
         if (sys_clock < picture_pre->pts)
         {
@@ -187,7 +187,7 @@ static void *video_output_loop (void *args)
             continue;
         }
         /*read data from filter or decode buffer */
-        picture = (AVPicture_t *) dtvideo_output_read (vo->parent);
+		picture = (AVPicture_t *) vo->parent->dtvideo_output_read();
         if (!picture)
         {
             dt_error (TAG, "[%s:%d]frame read failed ! \n", __FUNCTION__, __LINE__);
@@ -205,8 +205,8 @@ static void *video_output_loop (void *args)
             vctx->current_pts = picture->pts;
             //printf("[%s:%d]!update pts:%llu \n",__FUNCTION__,__LINE__,vctx->current_pts);
         }
-        /*read next frame ,check drop frame */
-        picture_pre = (AVPicture_t *) dtvideo_output_pre_read (vo->parent);
+        /*read next frame ,check drop frame */		
+        picture_pre = (AVPicture_t *) vo->parent->dtvideo_output_pre_read();
         if (picture_pre)
         {
             if (picture_pre->pts == -1) //invalid pts, calc using last pts
@@ -232,7 +232,7 @@ static void *video_output_loop (void *args)
         }
 
         /*update vpts */
-        dtvideo_update_pts (vo->parent);
+		vo->parent->dtvideo_update_pts();
         dtpicture_free (pic);
         free(picture);
         dt_usleep (REFRESH_DURATION);

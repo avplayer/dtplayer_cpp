@@ -54,6 +54,8 @@ typedef struct dec_audio_wrapper
 	}
 } dec_audio_wrapper_t;
 
+struct dtaudio_context;
+
 struct dtaudio_decoder
 {
     dtaudio_para_t aparam;
@@ -71,7 +73,7 @@ struct dtaudio_decoder
     
     adec_ctrl_t info;
     dt_buffer_t *buf_out;
-    void *parent;
+    struct dtaudio_context *parent;
     void *decoder_priv;         //point to avcodeccontext
     
     dtaudio_decoder(dtaudio_para_t &para);

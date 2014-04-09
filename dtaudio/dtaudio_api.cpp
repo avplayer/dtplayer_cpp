@@ -3,44 +3,25 @@
 
 #define TAG "AUDIO-API"
 
-
-
-class module_audio
-{
-	dtaudio_context_t *actx;
-	dthost *host;
-public:
-	module_audio();
-	int dtaudio_init (dtaudio_para_t * para, dthost *host);
-	int dtaudio_start ();
-	int dtaudio_pause ();
-	int dtaudio_resume ();
-	int dtaudio_stop ();
-	int64_t dtaudio_get_pts ();
-	int dtaudio_drop (module_audio *mod,int64_t target_pts);
-	int64_t dtaudio_get_first_pts ();
-	int dtaudio_get_state (dec_state_t * dec_state);
-	int dtaudio_get_out_closed ();
-};
-
 dtaudio* open_audio_module()
 {
 	dtaudio *audio = new dtaudio;
 	module_audio *mod_audio = new module_audio;
 	
-	audio->drop = std::bind(&module_audio::dtaudio_drop,mod_audio, _1);
-
-#if 0
-	audio->get_first_pts = std::bind(&mod_audio->dtaudio_get_first_pts);
-	audio->get_out_closed = std::bind(&mod_audio->dtaudio_get_out_closed);
-	audio->get_pts = std::bind(&mod_audio->dtaudio_get_pts);
-	audio->get_state = std::bind(&mod_audio->dtaudio_get_state,_1);
-	audio->init = std::bind(&mod_audio->dtaudio_init,_1,_2);
-	audio->pause = std::bind(&mod_audio->dtaudio_pause);
-	audio->resume = std::bind(&mod_audio->dtaudio_resume);
-	audio->stop = std::bind(&mod_audio->dtaudio_stop);
-#endif
-
+	audio->drop = std::bind(&module_audio::dtaudio_drop,mod_audio, std::placeholders::_1);
+	audio->init = std::bind(&module_audio::dtaudio_init,mod_audio,std::placeholders::_1,std::placeholders::_2);
+	audio->get_first_pts = std::bind(&module_audio::dtaudio_get_first_pts,mod_audio);
+	audio->get_out_closed = std::bind(&module_audio::dtaudio_get_out_closed,mod_audio);
+	audio->get_pts = std::bind(&module_audio::dtaudio_get_pts,mod_audio);
+	audio->get_state = std::bind(&module_audio::dtaudio_get_state,mod_audio,std::placeholders::_1);
+	audio->start = std::bind(&module_audio::dtaudio_start,mod_audio);
+	audio->pause = std::bind(&module_audio::dtaudio_pause,mod_audio);
+	audio->resume = std::bind(&module_audio::dtaudio_resume,mod_audio);
+	audio->stop = std::bind(&module_audio::dtaudio_stop,mod_audio);
+    
+	mod_audio->audio_ext = audio;
+    dt_info(TAG,"OPEN AUDIO MODULE ok \n");
+    return audio;
 }
 
 
@@ -71,10 +52,11 @@ static int audio_server_release (dtaudio_context_t * actx)
 module_audio::module_audio()
 {
 	actx = nullptr;
-	host = nullptr;
+	audio_ext = nullptr;
+	host_ext = nullptr;
 }
 
-int module_audio::dtaudio_init (dtaudio_para_t * para, dthost *_host)
+int module_audio::dtaudio_init (dtaudio_para_t * para, dthost *host)
 {
     int ret = 0;
 	
@@ -89,7 +71,8 @@ int module_audio::dtaudio_init (dtaudio_para_t * para, dthost *_host)
         return ret;
     }
     //we need to set parent early, Since enter audio decoder loop first,will crash for parent invalid
-	host = _host;
+	host_ext = host;
+	actx->parent = this;
     ret = actx->audio_init();
     if (ret < 0)
     {
@@ -97,6 +80,8 @@ int module_audio::dtaudio_init (dtaudio_para_t * para, dthost *_host)
         return ret;
     }
 
+    
+    dt_info(TAG,"DTAUDIO INIT OK\n");
     return ret;
 }
 

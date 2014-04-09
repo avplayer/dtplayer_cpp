@@ -10,24 +10,20 @@ void video_register_all()
 }
 
 /*read frame from dtport*/
-int dtvideo_read_frame (void *priv, dt_av_frame_t * frame)
+int dtvideo_context::dtvideo_read_frame (dt_av_frame_t * frame)
 {
     int type = DT_TYPE_VIDEO;
     int ret = 0;
-    dtvideo_context_t *vctx = (dtvideo_context_t *) priv;
-    ret = dthost_read_frame (vctx->parent, frame, type);
+	module_video *video = this->parent;
+	dthost *host = video->host_ext;
+    ret = host->read_frame (frame, type);
     return ret;
 }
 
-int dtvideo_filter_read ()
-{
-    return 0;
-}
-
 /*get picture from vo_queue,remove*/
-AVPicture_t *dtvideo_output_read (void *priv)
+AVPicture_t * dtvideo_context::dtvideo_output_read ()
 {
-    dtvideo_context_t *vctx = (dtvideo_context_t *) priv;
+    dtvideo_context_t *vctx = (dtvideo_context_t *) this;
 	AVPicture_t *pic = nullptr;
 	vctx->mux_vo_queue.lock();
 	if(!vctx->queue_vo.empty())
@@ -41,9 +37,9 @@ AVPicture_t *dtvideo_output_read (void *priv)
 }
 
 /*pre get picture from vo_queue, not remove*/
-AVPicture_t *dtvideo_output_pre_read (void *priv)
+AVPicture_t * dtvideo_context::dtvideo_output_pre_read ()
 {
-    dtvideo_context_t *vctx = (dtvideo_context_t *) priv;
+    dtvideo_context_t *vctx = (dtvideo_context_t *) this;
 	AVPicture_t *pic = nullptr;
 	vctx->mux_vo_queue.lock();
 	if(!vctx->queue_vo.empty())
@@ -55,29 +51,35 @@ AVPicture_t *dtvideo_output_pre_read (void *priv)
     return pic;
 }
 
-int64_t dtvideo_get_systime (void *priv)
+int64_t dtvideo_context::dtvideo_get_systime ()
 {
-    dtvideo_context_t *vctx = (dtvideo_context_t *) priv;
+    dtvideo_context_t *vctx = this;
     if (vctx->video_status <= VIDEO_STATUS_INITED)
         return -1;
-    return dthost_get_systime (vctx->parent);
+	module_video *video = this->parent;
+	dthost *host = video->host_ext;
+    return host->get_systime ();
 }
 
-void dtvideo_update_systime (void *priv, int64_t sys_time)
+void dtvideo_context::dtvideo_update_systime (int64_t sys_time)
 {
-    dtvideo_context_t *vctx = (dtvideo_context_t *) priv;
+    dtvideo_context_t *vctx = this;
     if (vctx->video_status <= VIDEO_STATUS_INITED)
         return;
-    dthost_update_systime (vctx->parent, sys_time);
+	module_video *video = this->parent;
+	dthost *host = video->host_ext;
+    host->update_systime (sys_time);
     return;
 }
 
-void dtvideo_update_pts (void *priv)
+void dtvideo_context::dtvideo_update_pts ()
 {
-    dtvideo_context_t *vctx = (dtvideo_context_t *) priv;
+    dtvideo_context_t *vctx = this;
     if (vctx->video_status < VIDEO_STATUS_INITED)
         return;
-    dthost_update_vpts (vctx->parent, vctx->current_pts);
+		module_video *video = this->parent;
+	dthost *host = video->host_ext;
+    host->update_vpts (vctx->current_pts);
     return;
 }
 
@@ -151,7 +153,7 @@ int dtvideo_context::video_drop (int64_t target_pts)
     int drop_count = 300;
     do
     {
-        pic = dtvideo_output_read ((void *) this);
+        pic = this->dtvideo_output_read ();
         if (!pic)
         {
             if (drop_count-- == 0)
@@ -173,7 +175,7 @@ int dtvideo_context::video_drop (int64_t target_pts)
     while (1);
     dt_info (TAG, "video drop finish,drop count:%d \n", drop_count);
     this->current_pts = cur_pts;
-    dtvideo_update_pts ((void *) this);
+	this->dtvideo_update_pts();
     return 0;
 }
 

@@ -49,12 +49,18 @@ typedef struct dtvideo_context
 
     int event_loop_id;
     void *video_server;
-    void *parent;               //dthost
+    module_video *parent;
     
     dtvideo_context(dtvideo_para_t &para);
 	int64_t video_get_current_pts ();
 	int64_t video_get_first_pts ();
 	int video_drop (int64_t target_pts);
+	void dtvideo_update_systime (int64_t sys_time);
+	int64_t dtvideo_get_systime ();
+	AVPicture_t * dtvideo_output_pre_read ();
+	AVPicture_t * dtvideo_output_read ();
+	int dtvideo_read_frame (dt_av_frame_t * frame);
+	void dtvideo_update_pts ();
 
 	int video_get_dec_state (dec_state_t * dec_state);
 	int video_get_out_closed ();

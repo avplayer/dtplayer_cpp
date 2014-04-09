@@ -30,7 +30,7 @@ typedef struct vd_wrapper
     std::function<int(struct vd_wrapper * wrapper, dt_av_frame_t * frame, AVPicture_t ** pic)> decode_frame;
     std::function<int(struct vd_wrapper * wrapper)> release;
 	void *vd_priv;
-    void *parent;
+	void *parent;
 	
     template<typename INIT, typename DECODE, typename RELEASE>
     vd_wrapper(int _type, const char * _name, video_format_t _vfmt,
@@ -40,6 +40,8 @@ typedef struct vd_wrapper
 	}
 
 } vd_wrapper_t;
+
+struct dtvideo_context;
 
 struct dtvideo_decoder
 {
@@ -57,7 +59,7 @@ struct dtvideo_decoder
     int frame_count;
 
     dt_buffer_t *buf_out;
-    void *parent;
+    struct dtvideo_context *parent;
     void *decoder_priv;
 	
 	dtvideo_decoder(dtvideo_para_t &para);

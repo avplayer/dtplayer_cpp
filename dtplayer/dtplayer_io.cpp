@@ -19,7 +19,8 @@ static int player_read_frame (dtplayer_context_t * dtp_ctx, dt_av_frame_t * fram
 
 static int player_write_frame (dtplayer_context_t * dtp_ctx, dt_av_frame_t * frame)
 {
-    return dthost_write_frame (dtp_ctx->host_priv, frame, frame->type);
+	dthost *host = dtp_ctx->host_ext;
+    return host->write_frame (frame, frame->type);
 }
 
 

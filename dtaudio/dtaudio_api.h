@@ -28,17 +28,38 @@ typedef struct dtaudio_para
 class dtaudio
 {
 public:
-	dtaudio();
+	dtaudio(){};
 	std::function<int (dtaudio_para_t *para, dthost *host)>init;
 	std::function<int ()>start;
 	std::function<int ()>pause;
 	std::function<int ()>resume;
 	std::function<int ()>stop;
 	std::function<int ()>get_pts;
-	std::function<int (void *priv,int64_t target)>drop;
+	std::function<int (int64_t target)>drop;
 	std::function<int ()>get_first_pts;
 	std::function<int (dec_state_t * dec_state)>get_state;
 	std::function<int ()>get_out_closed;
+};
+
+struct dtaudio_context;
+
+class module_audio
+{
+public:
+	dtaudio *audio_ext;
+	struct dtaudio_context *actx;
+	dthost *host_ext;
+	module_audio();
+	int dtaudio_init (dtaudio_para_t * para, dthost *host);
+	int dtaudio_start ();
+	int dtaudio_pause ();
+	int dtaudio_resume ();
+	int dtaudio_stop ();
+	int64_t dtaudio_get_pts ();
+	int dtaudio_drop (int64_t target_pts);
+	int64_t dtaudio_get_first_pts ();
+	int dtaudio_get_state (dec_state_t * dec_state);
+	int dtaudio_get_out_closed ();
 };
 
 dtaudio * open_audio_module();

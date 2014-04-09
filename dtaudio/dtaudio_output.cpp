@@ -160,12 +160,12 @@ static void *audio_output_loop (void *args)
         }
 
         /* update audio pts */
-        audio_update_pts (ao->parent);
+        ao->parent->audio_update_pts ();
 
         /*read data from filter or decode buffer */
         if (rlen <= 0)
         {
-            rlen = audio_output_read (ao->parent, buffer, PCM_WRITE_SIZE);
+            rlen = ao->parent->audio_output_read (buffer, PCM_WRITE_SIZE);
             if (rlen <= 0)
             {
                 dt_debug (LOG_TAG, "pcm read failed! \n");

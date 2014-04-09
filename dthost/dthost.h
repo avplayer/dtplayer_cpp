@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 class dtaudio;
+class dtvideo;
 
 typedef struct dthost_context
 {
@@ -21,10 +22,10 @@ typedef struct dthost_context
     int64_t av_diff;
     /*a-v-s port part */
     void *port_priv;
-    void *audio_priv;
-    void *video_priv;
 	
-	dtaudio *mod_audio;
+	dtaudio *audio_ext;
+	dtvideo *video_ext;
+	module_host *parent;
 	
 	dthost_context(dthost_para_t &_para);
 	int host_start ();

@@ -62,6 +62,8 @@ typedef struct
     int aout_buf_level;
 } ao_state_t;
 
+struct dtaudio_context;
+
 typedef struct dtaudio_output
 {
     /*para */
@@ -72,7 +74,7 @@ typedef struct dtaudio_output
     ao_state_t state;
 
     uint64_t last_valid_latency;
-    void *parent;               //point to dtaudio_t, can used for param of pcm get interface
+    struct dtaudio_context *parent;               //point to dtaudio_t, can used for param of pcm get interface
     
     dtaudio_output(dtaudio_para_t &para);
 	int audio_output_init (int ao_id);

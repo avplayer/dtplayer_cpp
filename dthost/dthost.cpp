@@ -62,7 +62,7 @@ dthost_context::dthost_context(dthost_para_t &_para)
 	
 	para.vctx_priv = _para.vctx_priv;
 	
-	mod_audio = nullptr;
+	audio_ext = nullptr;
 }
 
 
@@ -209,11 +209,11 @@ int dthost_context::host_start ()
         if (!has_audio)
             audio_start_flag = 1;
         else
-            audio_start_flag = !((first_apts = dtaudio_get_first_pts (this->audio_priv)) == -1);
+            audio_start_flag = !((first_apts =audio_ext->get_first_pts()) == -1);
         if (!has_video)
             video_start_flag = 1;
         else
-            video_start_flag = !((first_vpts = dtvideo_get_first_pts (this->video_priv)) == -1);
+            video_start_flag = !((first_vpts = video_ext->get_first_pts ()) == -1);
         if (audio_start_flag && video_start_flag)
             break;
         usleep (1000);
@@ -242,15 +242,15 @@ int dthost_context::host_start ()
     if (drop_flag)
     {
         if (this->pts_audio > this->pts_video)
-            dtvideo_drop (this->video_priv, this->pts_audio);
+            video_ext->drop (this->pts_audio);
         else
-            dtaudio_drop (this->audio_priv, this->pts_video);
+			audio_ext->drop(this->pts_video);
     }
     dt_info (TAG, "apts:%lld vpts:%lld \n", this->pts_audio, this->pts_video);
 
     if (has_audio)
     {
-        ret = dtaudio_start (this->audio_priv);
+		ret = audio_ext->start();
         if (ret < 0)
         {
             dt_error (TAG, "[%s:%d] dtaudio start failed \n", __FUNCTION__, __LINE__);
@@ -260,7 +260,7 @@ int dthost_context::host_start ()
     }
     if (has_video)
     {
-        ret = dtvideo_start (this->video_priv);
+        ret = video_ext->start ();
         if (ret < 0)
         {
             dt_error (TAG, "[%s:%d] dtvideo start failed \n", __FUNCTION__, __LINE__);
@@ -282,12 +282,12 @@ int dthost_context::host_pause ()
 
     if (has_audio)
     {
-        ret = dtaudio_pause (this->audio_priv);
+		ret = audio_ext->pause();
         if (ret < 0)
             dt_error (TAG, "[%s:%d] dtaudio external pause failed \n", __FUNCTION__, __LINE__);
     }
     if (has_video)
-        ret = dtvideo_pause (this->video_priv);
+        ret = video_ext->pause ();
     if (has_sub)
         ;                       //ret = dtsub_pause();
     return 0;
@@ -303,12 +303,12 @@ int dthost_context::host_resume ()
 
     if (has_audio)
     {
-        ret = dtaudio_resume (this->audio_priv);
+		ret = audio_ext->resume();
         if (ret < 0)
             dt_error (TAG, "[%s:%d] dtaudio external pause failed \n", __FUNCTION__, __LINE__);
     }
     if (has_video)
-        ret = dtvideo_resume (this->video_priv);
+        ret = video_ext->resume ();
     if (has_sub)
         ;
 
@@ -326,14 +326,14 @@ int dthost_context::host_stop ()
     /*first stop audio module */
     if (has_audio)
     {
-        ret = dtaudio_stop (this->audio_priv);
+		ret = audio_ext->stop();
         if (ret < 0)
             dt_error (TAG, "[%s:%d] dtaudio stop failed \n", __FUNCTION__, __LINE__);
     }
     /*stop video mudule */
     if (has_video)
     {
-        ret = dtvideo_stop (this->video_priv);
+        ret = video_ext->stop ();
         if (ret < 0)
             dt_error (TAG "[%s:%d] dtvideo stop failed \n", __FUNCTION__, __LINE__);
     }
@@ -403,13 +403,14 @@ int dthost_context::host_init ()
         video_para.video_filter = host_para->video_filter;
         video_para.video_output = host_para->video_output;
         video_para.avctx_priv = host_para->vctx_priv;
-        ret = dtvideo_init (&this->video_priv, &video_para, this);
+		video_ext = open_video_module();
+        ret = video_ext->init (&video_para, this->parent->host_ext);
         if (ret < 0)
             goto ERR3;
         dt_info (TAG, "[%s:%d] dtvideo init success \n", __FUNCTION__, __LINE__);
-        if (!this->video_priv)
+        if (!this->video_ext)
         {
-            dt_error (TAG, "[%s:%d] dtvideo init failed video_priv ==NULL \n", __FUNCTION__, __LINE__);
+            dt_error (TAG, "[%s:%d] dtvideo init failed video_ext ==NULL \n", __FUNCTION__, __LINE__);
             goto ERR3;
         }
     }
@@ -439,15 +440,14 @@ int dthost_context::host_init ()
         audio_para.audio_output = host_para->audio_output;
         audio_para.avctx_priv = host_para->actx_priv;
 		
-		mod_audio = open_audio_module();
-		ret = mod_audio->init(&audio_para,this);		
-        //ret = dtaudio_init (&this->audio_priv, &audio_para, this);
+		audio_ext = open_audio_module();
+		ret = audio_ext->init(&audio_para,this->parent->host_ext);		
         if (ret < 0)
             goto ERR2;
         dt_info (TAG, "[%s:%d]dtaudio init success \n", __FUNCTION__, __LINE__);
-        if (!this->audio_priv)
+        if (!this->audio_ext)
         {
-            dt_error (TAG, "[%s:%d] dtaudio init failed audio_priv ==NULL \n", __FUNCTION__, __LINE__);
+            dt_error (TAG, "[%s:%d] dtaudio init failed audio_ext ==NULL \n", __FUNCTION__, __LINE__);
             return -1;
         }
     }
@@ -462,7 +462,7 @@ int dthost_context::host_init ()
     dtport_stop (this->port_priv);
     if (host_para->has_audio)
     {
-        dtaudio_stop (this->audio_priv);
+		audio_ext->stop();
     }
     return -3;
 }
@@ -496,7 +496,7 @@ int dthost_context::host_get_state (host_state_t * state)
     if (has_audio)
     {
         dtport_get_state (this->port_priv, &buf_state, DT_TYPE_AUDIO);
-        dtaudio_get_state (this->audio_priv, &dec_state);
+		audio_ext->get_state(&dec_state);
         state->abuf_level = buf_state.data_len;
 		state->apkt_size = buf_state.size;
         state->adec_err_cnt = dec_state.adec_error_count;
@@ -513,7 +513,7 @@ int dthost_context::host_get_state (host_state_t * state)
     if (has_video)
     {
         dtport_get_state (this->port_priv, &buf_state, DT_TYPE_VIDEO);
-        dtvideo_get_state (this->video_priv, &dec_state);
+        video_ext->get_state (&dec_state);
         state->vbuf_level = buf_state.data_len;
 		state->vpkt_size = buf_state.size;
         state->vdec_err_cnt = dec_state.vdec_error_count;
@@ -536,11 +536,11 @@ int dthost_context::host_get_out_closed ()
     int aout_close = 0;
     int vout_close = 0;
     if (this->para.has_audio)
-        aout_close = dtaudio_get_out_closed (this->audio_priv);
+		aout_close = audio_ext->get_out_closed();
     else
         aout_close = 1;
     if (this->para.has_video)
-        vout_close = dtvideo_get_out_closed (this->video_priv);
+        vout_close = video_ext->get_out_closed ();
     else
         vout_close = 1;
     if (aout_close && vout_close)

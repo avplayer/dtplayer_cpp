@@ -7,6 +7,7 @@ int dtplayer_context::player_host_init ()
     int ret;
     char value[512];
     
+	host_ext = open_host_module();	
     dthost_para_t *host_para = &this->host_para;
     player_ctrl_t *pctrl = &this->ctrl_info;
     memset (host_para, 0, sizeof (dthost_para_t));
@@ -105,7 +106,7 @@ int dtplayer_context::player_host_init ()
     //----sub part------
     /* init dthost */
     this->host_priv = NULL;
-    ret = dthost_init (&this->host_priv, host_para);
+    ret = this->host_ext->init (host_para);
     if (ret < 0)
     {
         dt_error (TAG, "[%s:%d] DTHOST_INIF FAILED \n", __FUNCTION__, __LINE__);
@@ -119,22 +120,22 @@ int dtplayer_context::player_host_init ()
 
 int dtplayer_context::player_host_start ()
 {
-    return dthost_start (this->host_priv);
+    return this->host_ext->start ();
 }
 
 int dtplayer_context::player_host_pause ()
 {
-    return dthost_pause (this->host_priv);
+    return this->host_ext->pause ();
 }
 
 int dtplayer_context::player_host_resume ()
 {
-    return dthost_resume (this->host_priv);
+    return this->host_ext->resume ();
 }
 
 int dtplayer_context::player_host_stop ()
 {
-    int ret = dthost_stop (this->host_priv);
+    int ret = this->host_ext->stop ();
     dt_info (TAG, "host module quit ok \n");
     return ret;
 }

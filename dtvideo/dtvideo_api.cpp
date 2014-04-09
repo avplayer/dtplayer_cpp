@@ -2,13 +2,35 @@
 
 #define TAG "VIDEO-API"
 
+dtvideo* open_video_module()
+{
+	dtvideo *video = new dtvideo;
+	module_video *mod_video = new module_video;
+	
+	video->drop = std::bind(&module_video::dtvideo_drop,mod_video, std::placeholders::_1);
+	video->init = std::bind(&module_video::dtvideo_init,mod_video,std::placeholders::_1,std::placeholders::_2);
+	video->get_first_pts = std::bind(&module_video::dtvideo_get_first_pts,mod_video);
+	video->get_out_closed = std::bind(&module_video::dtvideo_get_out_closed,mod_video);
+	video->get_state = std::bind(&module_video::dtvideo_get_state,mod_video,std::placeholders::_1);
+	video->start = std::bind(&module_video::dtvideo_start,mod_video);
+	video->pause = std::bind(&module_video::dtvideo_pause,mod_video);
+	video->resume = std::bind(&module_video::dtvideo_resume,mod_video);
+	video->stop = std::bind(&module_video::dtvideo_stop,mod_video);
+    
+	mod_video->video_ext = video;
+    dt_info(TAG,"OPEN VIDEO MODULE ok \n");
+    return video;
+}
+
+
 //==Part1:Control
-int dtvideo_init (void **video_priv, dtvideo_para_t * para, void *parent)
+int module_video::dtvideo_init (dtvideo_para_t * para, dthost *host)
 {
     int ret = 0;
 	dtvideo_para_t &vpara = *para;   
-    dtvideo_context_t *vctx = new dtvideo_context(vpara);	
-    vctx->parent = parent;	
+    vctx = new dtvideo_context(vpara);
+	host_ext = host;
+	vctx->parent = this;
     ret = vctx->video_init ();
     if (ret < 0)
     {
@@ -16,7 +38,7 @@ int dtvideo_init (void **video_priv, dtvideo_para_t * para, void *parent)
         ret = -1;
         goto ERR1;
     }
-    *video_priv = (void *) vctx;
+   
     return ret;
   ERR1:
     delete(vctx);
@@ -24,29 +46,25 @@ int dtvideo_init (void **video_priv, dtvideo_para_t * para, void *parent)
     return ret;
 }
 
-int dtvideo_start (void *video_priv)
+int module_video::dtvideo_start ()
 {
-    dtvideo_context_t *vctx = (dtvideo_context_t *) video_priv;
 	return vctx->video_start();
 }
 
-int dtvideo_pause (void *video_priv)
+int module_video::dtvideo_pause ()
 {
-    dtvideo_context_t *vctx = (dtvideo_context_t *) video_priv;
 	return vctx->video_pause();
 }
 
-int dtvideo_resume (void *video_priv)
+int module_video::dtvideo_resume ()
 {
-    dtvideo_context_t *vctx = (dtvideo_context_t *) video_priv;
 	return vctx->video_resume();
 
 }
 
-int dtvideo_stop (void *video_priv)
+int module_video::dtvideo_stop ()
 {
     int ret;
-    dtvideo_context_t *vctx = (dtvideo_context_t *) video_priv;
     if (!vctx)
     {
         dt_error (TAG, "[%s:%d] dt video context == NULL\n", __FUNCTION__, __LINE__);
@@ -61,37 +79,28 @@ int dtvideo_stop (void *video_priv)
         goto ERR0;
     }
     delete (vctx);
-    video_priv = NULL;
     return ret;
   ERR0:
     return ret;
 
 }
 
-int64_t dtvideo_get_first_pts (void *video_priv)
+int64_t module_video::dtvideo_get_first_pts ()
 {
-    dtvideo_context_t *vctx = (dtvideo_context_t *) video_priv;
 	return vctx->video_get_first_pts();
 }
 
-int dtvideo_drop (void *video_priv, int64_t target_pts)
+int module_video::dtvideo_drop (int64_t target_pts)
 {
-    dtvideo_context_t *vctx = (dtvideo_context_t *) video_priv;
     return vctx->video_drop (target_pts);
 }
 
-int dtvideo_get_state (void *video_priv, dec_state_t * dec_state)
+int module_video::dtvideo_get_state (dec_state_t * dec_state)
 {
-    int ret;
-    dtvideo_context_t *vctx = (dtvideo_context_t *) video_priv;
-    ret = vctx->video_get_dec_state (dec_state);
-    return ret;
+    return vctx->video_get_dec_state (dec_state);
 }
 
-int dtvideo_get_out_closed (void *video_priv)
+int module_video::dtvideo_get_out_closed ()
 {
-    int ret;
-    dtvideo_context_t *vctx = (dtvideo_context_t *) video_priv;
-    ret = vctx->video_get_out_closed ();
-    return ret;
+    return vctx->video_get_out_closed ();
 }

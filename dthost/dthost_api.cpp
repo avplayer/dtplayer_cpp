@@ -1,57 +1,73 @@
 #include "dthost_api.h"
 #include "dthost.h"
 
-#define TAG "HOST-EXT"
+#include <functional>
 
-int dthost_start (void *host_priv)
+#define TAG "HOST-API"
+
+module_host::module_host()
 {
-    int ret = 0;
-    dthost_context_t *hctx = (dthost_context_t *) host_priv;
-    dt_debug (TAG, "hctx :%p \n", hctx);
-    ret = hctx->host_start ();
-    return ret;
+	hctx = nullptr;
 }
 
-int dthost_pause (void *host_priv)
+dthost * open_host_module()
 {
-    int ret = 0;
-    dthost_context_t *hctx = (dthost_context_t *) host_priv;
-    ret = hctx->host_pause ();
-    return ret;
+	dthost *host = new dthost;
+	module_host *mod_host = new module_host;
+	
+	host->init = std::bind(&module_host::dthost_init,mod_host,std::placeholders::_1);
+	host->start = std::bind(&module_host::dthost_start,mod_host);
+	host->pause = std::bind(&module_host::dthost_pause,mod_host);
+	host->resume = std::bind(&module_host::dthost_resume,mod_host);
+	host->stop = std::bind(&module_host::dthost_stop,mod_host);
+	
+	host->read_frame = std::bind(&module_host::dthost_read_frame,mod_host,std::placeholders::_1,std::placeholders::_2);
+	host->write_frame = std::bind(&module_host::dthost_write_frame,mod_host,std::placeholders::_1,std::placeholders::_2);
+	host->get_apts = std::bind(&module_host::dthost_get_apts,mod_host);
+	host->update_apts = std::bind(&module_host::dthost_update_apts,mod_host,std::placeholders::_1);
+	host->get_vpts = std::bind(&module_host::dthost_get_vpts,mod_host);
+	host->update_vpts = std::bind(&module_host::dthost_update_vpts,mod_host,std::placeholders::_1);
+	host->get_systime = std::bind(&module_host::dthost_get_systime,mod_host);
+	host->update_systime = std::bind(&module_host::dthost_update_systime,mod_host,std::placeholders::_1);
+	host->get_avdiff = std::bind(&module_host::dthost_get_avdiff,mod_host);
+	
+	host->get_current_time = std::bind(&module_host::dthost_get_current_time,mod_host);
+	host->get_state = std::bind(&module_host::dthost_get_state,mod_host,std::placeholders::_1);
+	host->get_out_closed = std::bind(&module_host::dthost_get_out_closed,mod_host);
+    
+	mod_host->host_ext = host;
+    dt_info(TAG,"OPEN HOST MODULE ok \n");
+    return host;
 }
 
-int dthost_resume (void *host_priv)
+
+int module_host::dthost_start ()
 {
-    int ret = 0;
-    dthost_context_t *hctx = (dthost_context_t *) host_priv;
-    ret = hctx->host_resume ();
-    return ret;
+    return hctx->host_start ();
 }
 
-int dthost_stop (void *host_priv)
+int module_host::dthost_pause ()
 {
-    int ret = 0;
-    if (!host_priv)
-        return -1;
-    dthost_context_t *hctx = (dthost_context_t *) host_priv;
-    ret = hctx->host_stop ();
-    if (ret < 0)
-        goto FAIL;
-    delete(hctx);
-    host_priv = NULL;
-  FAIL:
-    return ret;
-
+    return hctx->host_pause ();
 }
 
-int dthost_init (void **host_priv, dthost_para_t * para)
+int module_host::dthost_resume ()
+{
+    return hctx->host_resume ();
+}
+
+int module_host::dthost_stop ()
+{
+	return hctx->host_stop ();
+}
+
+int module_host::dthost_init (dthost_para_t * para)
 {
     int ret = 0;
    
     dthost_para_t &hpara = *para;
-    dthost_context_t *hctx = new dthost_context(hpara);
-    dt_debug (TAG, "hctx :%p \n", hctx);
-	
+    hctx = new dthost_context(hpara);
+	hctx->parent = this;
     ret = hctx->host_init();
     if (ret < 0)
     {
@@ -59,130 +75,69 @@ int dthost_init (void **host_priv, dthost_para_t * para)
         ret = -1;
         goto ERR1;
     }
-    *host_priv = (void *) hctx;
+
     return ret;
   ERR1:
     delete (hctx);
-  ERR0:
     return ret;
 }
 
-//==Part2:Data IO Relative
-
-int dthost_read_frame (void *host_priv, dt_av_frame_t * frame, int type)
+int module_host::dthost_read_frame (dt_av_frame_t * frame, int type)
 {
-    int ret = 0;
-    if (!host_priv)
-    {
-        dt_error (TAG, "[%s:%d] host_priv is Null\n", __FUNCTION__, __LINE__);
-        return -1;
-    }
-    dthost_context_t *hctx = (dthost_context_t *) host_priv;
-    ret = hctx->host_read_frame (frame, type);
-    return ret;
+    return hctx->host_read_frame (frame, type);
 }
 
-int dthost_write_frame (void *host_priv, dt_av_frame_t * frame, int type)
+int module_host::dthost_write_frame (dt_av_frame_t * frame, int type)
 {
-    int ret = 0;
-    if (!host_priv)
-    {
-        dt_error (TAG, "[%s:%d] host_priv==NULL \n", __FUNCTION__, __LINE__);
-        return -1;
-    }
-    dthost_context_t *hctx = (dthost_context_t *) (host_priv);
-    ret = hctx->host_write_frame (frame, type);
-    return ret;
+    return hctx->host_write_frame (frame, type);
 }
 
-//==Part3: PTS Relative
-
-int64_t dthost_get_apts (void *host_priv)
+int64_t module_host::dthost_get_apts ()
 {
-    if (!host_priv)
-        return -1;
-    dthost_context_t *hctx = (dthost_context_t *) (host_priv);
     return hctx->host_get_apts ();
 }
 
-int64_t dthost_update_apts (void *host_priv, int64_t pts)
+int module_host::dthost_update_apts (int64_t pts)
 {
-    if (!host_priv)
-        return -1;
-    dthost_context_t *hctx = (dthost_context_t *) (host_priv);
     return hctx->host_update_apts (pts);
 }
 
-int64_t dthost_get_vpts (void *host_priv)
+int64_t module_host::dthost_get_vpts ()
 {
-    if (!host_priv)
-        return -1;
-    dthost_context_t *hctx = (dthost_context_t *) (host_priv);
     return hctx->host_get_vpts ();
 }
 
-void dthost_update_vpts (void *host_priv, int64_t vpts)
+int module_host::dthost_update_vpts (int64_t vpts)
 {
-    if (!host_priv)
-        return;
-    dthost_context_t *hctx = (dthost_context_t *) (host_priv);
-    hctx->host_update_vpts (vpts);
-    return;
+    return hctx->host_update_vpts (vpts);
 }
 
-int dthost_get_avdiff (void *host_priv)
+int64_t module_host::dthost_get_avdiff ()
 {
-    if (!host_priv)
-        return 0;
-    dthost_context_t *hctx = (dthost_context_t *) (host_priv);
     return hctx->host_get_avdiff ();
 }
 
-int64_t dthost_get_current_time (void *host_priv)
+int64_t module_host::dthost_get_current_time ()
 {
-    if (!host_priv)
-        return -1;
-    dthost_context_t *hctx = (dthost_context_t *) (host_priv);
     return hctx->host_get_current_time ();
 }
 
-int64_t dthost_get_systime (void *host_priv)
+int64_t module_host::dthost_get_systime ()
 {
-    if (!host_priv)
-        return -1;
-    dthost_context_t *hctx = (dthost_context_t *) (host_priv);
     return hctx->host_get_systime ();
 }
 
-void dthost_update_systime (void *host_priv, int64_t systime)
+int module_host::dthost_update_systime (int64_t systime)
 {
-    if (!host_priv)
-        return;
-    dthost_context_t *hctx = (dthost_context_t *) (host_priv);
-    hctx->host_update_systime (systime);
-    return;
+    return hctx->host_update_systime (systime);
 }
 
-//==Part4:Status Relative
-
-int dthost_get_state (void *host_priv, host_state_t * state)
+int module_host::dthost_get_state (host_state_t * state)
 {
-    dthost_context_t *hctx = (dthost_context_t *) (host_priv);
-    if (!host_priv)
-        return -1;
-    hctx->host_get_state (state);
-    return 0;
+    return hctx->host_get_state (state);
 }
 
-int dthost_get_out_closed (void *host_priv)
+int module_host::dthost_get_out_closed ()
 {
-    int ret = 0;
-    if (!host_priv)
-    {
-        dt_error (TAG, "host PRIV IS NULL \n");
-        return -1;
-    }
-    dthost_context_t *hctx = (dthost_context_t *) host_priv;
-    ret = hctx->host_get_out_closed ();
-    return ret;
+    return hctx->host_get_out_closed ();
 }
