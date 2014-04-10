@@ -322,7 +322,6 @@ int dthost_context::host_stop ()
     has_audio = this->para.has_audio;
     has_video = this->para.has_video;
     has_sub = this->para.has_sub;
-
     /*first stop audio module */
     if (has_audio)
     {
@@ -340,7 +339,7 @@ int dthost_context::host_stop ()
     if (has_sub)
         ;
     /*stop dtport module at last */
-    ret = dtport_stop (this->port_priv);
+    ret = this->port_ext->stop ();
     if (ret < 0)
         dt_error (TAG, "[%s:%d] dtport stop failed \n", __FUNCTION__, __LINE__);
     return 0;
@@ -371,8 +370,9 @@ int dthost_context::host_init ()
     port_para.has_audio = host_para->has_audio;
     port_para.has_subtitle = host_para->has_sub;
     port_para.has_video = host_para->has_video;
-
-    ret = dtport_init (&this->port_priv, &port_para, this);
+	
+	port_ext = open_port_module();
+    ret = port_ext->init (&port_para);
     if (ret < 0)
         goto ERR1;
     dt_info (TAG, "[%s:%d] dtport init success \n", __FUNCTION__, __LINE__);
@@ -456,10 +456,10 @@ int dthost_context::host_init ()
   ERR1:
     return -1;
   ERR2:
-    dtport_stop (this->port_priv);
+	this->port_ext->stop();
     return -2;
   ERR3:
-    dtport_stop (this->port_priv);
+	this->port_ext->stop();
     if (host_para->has_audio)
     {
 		audio_ext->stop();
@@ -469,22 +469,17 @@ int dthost_context::host_init ()
 
 int dthost_context::host_write_frame (dt_av_frame_t * frame, int type)
 {
-    return dtport_write_frame (this->port_priv, frame, type);
+	return port_ext->write_frame(frame,type);
 }
 
 int dthost_context::host_read_frame (dt_av_frame_t * frame, int type)
 {
-    if (this == NULL)
-    {
-        dt_error (TAG, "dthost_context is NULL\n");
-        return -1;
-    }
-    if (NULL == this->port_priv)
+    if (NULL == this->port_ext)
     {
         dt_error (TAG, "dtport is NULL\n");
         return -1;
     }
-    return dtport_read_frame (this->port_priv, frame, type);
+    return port_ext->read_frame(frame,type);
 }
 
 int dthost_context::host_get_state (host_state_t * state)
@@ -495,7 +490,7 @@ int dthost_context::host_get_state (host_state_t * state)
     dec_state_t dec_state;
     if (has_audio)
     {
-        dtport_get_state (this->port_priv, &buf_state, DT_TYPE_AUDIO);
+		port_ext->get_state(&buf_state, DT_TYPE_AUDIO);
 		audio_ext->get_state(&dec_state);
         state->abuf_level = buf_state.data_len;
 		state->apkt_size = buf_state.size;
@@ -512,7 +507,7 @@ int dthost_context::host_get_state (host_state_t * state)
 
     if (has_video)
     {
-        dtport_get_state (this->port_priv, &buf_state, DT_TYPE_VIDEO);
+		port_ext->get_state(&buf_state, DT_TYPE_VIDEO);
         video_ext->get_state (&dec_state);
         state->vbuf_level = buf_state.data_len;
 		state->vpkt_size = buf_state.size;

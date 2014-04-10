@@ -1,24 +1,39 @@
 #include "dtport_api.h"
 #include "dtport.h"
 
-//==Part1:Control
-//
-int dtport_stop (void *port)
+#define TAG "PORT_API"
+
+dtport* open_port_module()
 {
-    int ret = 0;
-    dtport_context_t *pctx = (dtport_context_t *) port;
+	dtport *port = new dtport;
+	module_port *mod_port = new module_port;
+	
+	port->init = std::bind(&module_port::dtport_init,mod_port,std::placeholders::_1);
+	port->stop = std::bind(&module_port::dtport_stop,mod_port);
+	
+	port->read_frame = std::bind(&module_port::dtport_read_frame,mod_port,std::placeholders::_1,std::placeholders::_2);
+	port->write_frame = std::bind(&module_port::dtport_write_frame,mod_port,std::placeholders::_1,std::placeholders::_2);
+	port->get_state = std::bind(&module_port::dtport_get_state,mod_port,std::placeholders::_1,std::placeholders::_2);
+    
+	mod_port->port_ext = port;
+    dt_info(TAG,"OPEN PORT MODULE ok \n");
+    return port;
+}
+
+int module_port::dtport_stop()
+{
 	pctx->port_stop();
 	delete(pctx);
-    return ret;
+    return 0;
 
 }
 
-int dtport_init (void **port, dtport_para_t * para, void *parent)
+int module_port::dtport_init (dtport_para_t * para)
 {
     int ret;	
     dtport_para_t &ppara = *para;
-    dtport_context_t *pctx = new dtport_context(ppara);
-    
+    pctx = new dtport_context(ppara);
+    pctx->parent = this;
     ret = pctx->port_init();
     if (ret < 0)
     {
@@ -26,8 +41,6 @@ int dtport_init (void **port, dtport_para_t * para, void *parent)
         ret = -1;
         goto ERR1;
     }
-    *port = (void *) pctx;
-    pctx->parent = parent;
     return ret;
   ERR1:
     free (pctx);
@@ -35,22 +48,17 @@ int dtport_init (void **port, dtport_para_t * para, void *parent)
     return ret;
 }
 
-//==Part2:DATA IO Relative
-int dtport_write_frame (void *port, dt_av_frame_t * frame, int type)
+int module_port::dtport_write_frame (dt_av_frame_t * frame, int type)
 {
-    dtport_context_t *pctx = (dtport_context_t *) port;
     return pctx->port_write_frame (frame, type);
 }
 
-int dtport_read_frame (void *port, dt_av_frame_t * frame, int type)
+int module_port::dtport_read_frame (dt_av_frame_t * frame, int type)
 {
-    dtport_context_t *pctx = (dtport_context_t *) port;
     return pctx->port_read_frame (frame, type);
 }
 
-//==Part3:State
-int dtport_get_state (void *port, buf_state_t * buf_state, int type)
+int module_port::dtport_get_state (buf_state_t * buf_state, int type)
 {
-    dtport_context_t *pctx = (dtport_context_t *) port;
     return pctx->port_get_state (buf_state, type);
 }

@@ -37,7 +37,7 @@ typedef struct dtport_context
 
     dtport_para_t param;
     port_status_t status;
-    void *parent;
+    module_port *parent;
 	
 	dtport_context(dtport_para_t &para);
 	int port_stop ();

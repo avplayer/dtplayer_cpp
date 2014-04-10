@@ -8,6 +8,7 @@
 
 class dtaudio;
 class dtvideo;
+class dtport;
 
 typedef struct dthost_context
 {
@@ -21,8 +22,7 @@ typedef struct dthost_context
     int sync_mode;
     int64_t av_diff;
     /*a-v-s port part */
-    void *port_priv;
-	
+    dtport *port_ext;
 	dtaudio *audio_ext;
 	dtvideo *video_ext;
 	module_host *parent;
