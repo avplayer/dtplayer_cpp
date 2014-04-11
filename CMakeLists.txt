@@ -35,7 +35,10 @@ include_directories(${SDL2_INCLUDE_DIR})
 include_directories(dtutils)
 include_directories(dtplayer)
 include_directories(dthost)
+include_directories(dtport)
 include_directories(dtdemux)
+include_directories(dtaudio)
+include_directories(dtvideo)
 
 add_subdirectory(dtutils)
 add_subdirectory(dtplayer)
@@ -47,7 +50,7 @@ add_subdirectory(dtvideo)
 add_subdirectory(dtaudio)
 
 
-add_executable(dtmplayer dtm_player.cpp version.cpp)
+add_executable(dtmplayer tools/dt_player.cpp tools/version.cpp tools/ao_sdl2.cpp tools/vo_sdl2.cpp tools/ui.cpp tools/render.cpp)
 target_link_libraries(dtmplayer ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(dtmplayer dtplayercore  dthost dtport dtdemux dtstream dtvideo dtaudio dtutils)
 

@@ -15,7 +15,7 @@ add_definitions(-DENABLE_ADEC_FAAD)
 list(APPEND LIBAUDIOSOURCES  audio_decoder/dec_audio_faad.cpp)
 endif()
 
-add_library(dtaudio STATIC ${LIBAUDIOSOURCES} audio_out/ao_sdl2.cpp)
+add_library(dtaudio STATIC ${LIBAUDIOSOURCES})
 
 target_link_libraries(dtaudio  ${SDL2_LIBRARIES})
 

@@ -91,6 +91,6 @@ typedef struct dtaudio_output
 }dtaudio_output_t;
 
 void aout_register_all();
-
+void aout_register_ext (ao_wrapper_t &ao);
 
 #endif

@@ -9,6 +9,11 @@ void video_register_all()
     vout_register_all();
 }
 
+void register_ext_vo(vo_wrapper_t &vo)
+{
+   vout_register_ext(vo); 
+}
+
 /*read frame from dtport*/
 int dtvideo_context::dtvideo_read_frame (dt_av_frame_t * frame)
 {

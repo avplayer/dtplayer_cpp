@@ -233,6 +233,7 @@ typedef enum _AO_ID_
 	AO_ID_SDL2,
     AO_ID_OSS,
     AO_ID_DSOUND,
+	AO_ID_EX,
 } dtao_format_t;
 
 /*subtitle part*/

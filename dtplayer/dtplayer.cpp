@@ -119,7 +119,7 @@ void dtplayer_context::player_update_state ()
     this->calc_cur_time (&host_state);
 
     /*show info */
-    dt_info (TAG, "apkt_size:%d vpkt_size:%d cur_time:%lld(s) %lld(ms) duration:%lld(s) \n ", host_state.apkt_size, host_state.vpkt_size, play_stat->cur_time, play_stat->cur_time_ms, this->media_info->duration);
+    dt_debug (TAG, "apkt_size:%d vpkt_size:%d cur_time:%lld(s) %lld(ms) duration:%lld(s) \n ", host_state.apkt_size, host_state.vpkt_size, play_stat->cur_time, play_stat->cur_time_ms, this->media_info->duration);
 }
 
 int dtplayer_context::player_init ()

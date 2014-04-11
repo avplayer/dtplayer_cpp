@@ -9,6 +9,11 @@ void audio_register_all()
     aout_register_all();
 }
 
+void register_ext_ao(ao_wrapper_t &ao)
+{
+    aout_register_ext(ao);
+}
+
 /*ao read pcm from decoder buf*/
 int dtaudio_context::audio_output_read (uint8_t * buf, int size)
 {

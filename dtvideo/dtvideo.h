@@ -73,13 +73,7 @@ typedef struct dtvideo_context
 } dtvideo_context_t;
 
 void video_register_all();
-int dtvideo_read_frame (void *priv, dt_av_frame_t * frame);
-AVPicture_t *dtvideo_output_read (void *priv);
-AVPicture_t *dtvideo_output_pre_read (void *priv);
-int dtvideo_get_avdiff (void *priv);
-int64_t dtvideo_get_systime (void *priv);
-void dtvideo_update_systime (void *priv, int64_t sys_time);
-void dtvideo_update_pts (void *priv);
+void register_ext_vo(vo_wrapper_t &vo);
 
 
 

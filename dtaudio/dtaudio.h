@@ -79,5 +79,6 @@ public:
 } dtaudio_context_t;
 
 void audio_register_all();
+void register_ext_ao(ao_wrapper_t &ao);
 
 #endif

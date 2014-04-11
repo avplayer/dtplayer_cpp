@@ -23,6 +23,11 @@ static void register_vo (const vo_wrapper_t & vo)
 	dt_info (TAG, "register vo. id:%d name:%s \n", vo.id, vo.name);
 }
 
+void vout_register_ext (vo_wrapper_t & vo)
+{
+    g_vo.push_back(vo);
+}
+
 void vout_register_all ()
 {
     /*Register all audio_output */

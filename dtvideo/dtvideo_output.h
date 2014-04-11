@@ -48,6 +48,7 @@ typedef enum _VO_ID_
     VO_ID_GL,
     VO_ID_DIRECTX,
     VO_ID_SDL2,
+	VO_ID_EX,
 } dt_vo_t;
 
 typedef struct
@@ -81,5 +82,6 @@ struct dtvideo_output
 };
 
 void vout_register_all();
+void vout_register_ext (vo_wrapper_t &vo);
 
 #endif
