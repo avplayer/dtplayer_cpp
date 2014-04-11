@@ -77,7 +77,7 @@ dtdemuxer_context::dtdemuxer_context(dtdemuxer_para_t& _para)
 {
 	para.file_name = _para.file_name;
 	demuxer = nullptr;
-	stream_priv = nullptr;
+	stream_ext = nullptr;
 	parent = nullptr;
 	probe_buf = nullptr;
 }
@@ -87,8 +87,9 @@ int dtdemuxer_context::demuxer_open ()
     int ret = 0;
     /* open stream */
     dtstream_para_t para;
-    para.stream_name = this->para.file_name; 
-    ret = dtstream_open(&this->stream_priv,&para,this);
+    para.stream_name = this->para.file_name;
+	stream_ext = open_stream_module();
+	ret = stream_ext->open(&para);
     if(ret != DTERROR_NONE)
     {
         dt_error (TAG, "stream open failed \n");
@@ -117,18 +118,18 @@ int dtdemuxer_context::demuxer_open ()
 
     if(probe_enable)
     {
-        int64_t old_pos = dtstream_tell(this->stream_priv);
+		int64_t old_pos = stream_ext->tell();
         dt_info(TAG,"old:%lld \n",old_pos);
 		probe_buf = new dt_buffer;
         ret = probe_buf->buf_init(PROBE_BUF_SIZE);
         if(ret < 0)
             return -1; 
 		dt_info(TAG," buf init ok \n");
-        ret = dtstream_read(this->stream_priv,this->probe_buf->data,probe_size); 
+		ret = stream_ext->read(this->probe_buf->data,probe_size);
         if(ret <= 0)
             return -1;
         this->probe_buf->level = ret;
-        ret = dtstream_seek(this->stream_priv,old_pos,SEEK_SET); 
+		ret = stream_ext->seek(old_pos,SEEK_SET);
         dt_info(TAG,"seek back to:%lld ret:%d \n",old_pos,ret);
     }
 
@@ -209,6 +210,6 @@ int dtdemuxer_context::demuxer_close ()
 		delete(probe_buf);
 	}
     /* close stream */
-    dtstream_close(this->stream_priv);
+	stream_ext->close();
     return 0;
 }

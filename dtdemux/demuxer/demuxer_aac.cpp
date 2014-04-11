@@ -247,7 +247,7 @@ static int demuxer_aac_open(demuxer_wrapper_t *wrapper)
     aac_ctx->channels = channel;
     dt_debug(TAG,"channel:%d \n",channel);
     aac_ctx->bps = 16;
-    aac_ctx->file_size = dtstream_get_size(ctx->stream_priv);
+	aac_ctx->file_size = ctx->stream_ext->get_size();
     estimate_duration(wrapper);
     return 0;
 }
@@ -295,33 +295,34 @@ static int demuxer_aac_setup_info (demuxer_wrapper_t * wrapper, dt_media_info_t 
 static int demuxer_aac_read_frame(demuxer_wrapper_t *wrapper, dt_av_frame_t *frame)
 {
     dtdemuxer_context_t *dem_ctx = (dtdemuxer_context_t *) wrapper->parent;
+	dtstream *stream = dem_ctx->stream_ext;
     aac_ctx_t *aac_ctx = (aac_ctx_t *)wrapper->demuxer_priv;
     
 	int len, srate, num;
 	float tm = 0;
     int ret = 0;
     uint8_t c1,c2;
-    if(dtstream_eof(dem_ctx->stream_priv))
+    if(stream->eof())
         return DTERROR_READ_EOF;
 
     /* find sync word */
-    while(!dtstream_eof(dem_ctx->stream_priv))
+    while(!stream->eof())
     {
 	    c1 = c2 = 0;
 	    while(c1 != 0xFF)
 	    {
-		    ret = dtstream_read(dem_ctx->stream_priv,&c1,1);
+		    ret = stream->read(&c1,1);
 		    if(ret < 0)
 			    return DTERROR_READ_FAILED;
 	    }
-		ret = dtstream_read(dem_ctx->stream_priv,&c2,1);
+		ret = stream->read(&c2,1);
 	    if(ret < 0)
             return DTERROR_READ_FAILED;
 	    if((c2 & 0xF6) != 0xF0)
 		    continue;
 	    aac_ctx->buf[0] = (unsigned char) c1;
 	    aac_ctx->buf[1] = (unsigned char) c2;
-	    if(dtstream_read(dem_ctx->stream_priv, &(aac_ctx->buf[2]), 6) < 6)
+	    if(stream->read(&(aac_ctx->buf[2]), 6) < 6)
 		    return DTERROR_READ_FAILED;
 
 	    len = aac_parse_frame(aac_ctx->buf, &srate, &num);
@@ -332,11 +333,11 @@ static int demuxer_aac_read_frame(demuxer_wrapper_t *wrapper, dt_av_frame_t *fra
 		    if(!data)
 			{
 			    dt_error(TAG, "read frame, NEW_PACKET(%d)FAILED\n", len);
-		        dtstream_skip(dem_ctx->stream_priv, -8);
+		        stream->skip(-8);
 				return DTERROR_READ_AGAIN;
 			}
 			memcpy(data, aac_ctx->buf, 8);
-			dtstream_read(dem_ctx->stream_priv, &(data[8]), len-8);
+			stream->read(&(data[8]), len-8);
 			if(srate)
 				tm = (float) (num * 1024.0/srate);
 			aac_ctx->last_pts += tm;
@@ -355,7 +356,7 @@ static int demuxer_aac_read_frame(demuxer_wrapper_t *wrapper, dt_av_frame_t *fra
             return DTERROR_NONE;
 	    }
 	    else
-		    dtstream_skip(dem_ctx->stream_priv, -6);
+		    stream->skip(-6);
     }
     return DTERROR_READ_EOF;
 }
@@ -366,6 +367,7 @@ static int demuxer_aac_read_frame(demuxer_wrapper_t *wrapper, dt_av_frame_t *fra
 static int demuxer_aac_seek_frame(demuxer_wrapper_t *wrapper, int timestamp)
 {
     dtdemuxer_context_t *dem_ctx = (dtdemuxer_context_t *) wrapper->parent;
+	dtstream *stream = dem_ctx->stream_ext;
     aac_ctx_t *aac_ctx = (aac_ctx_t *)wrapper->demuxer_priv;
  
 	float time;
@@ -375,22 +377,22 @@ static int demuxer_aac_seek_frame(demuxer_wrapper_t *wrapper, int timestamp)
         return -1;
 	
 	aac_ctx->last_pts = 0;
-    dtstream_seek(dem_ctx->stream_priv,0,SEEK_SET);
+    stream->seek(0,SEEK_SET);
 
 	int len, nf, srate, num;
     nf = time * aac_ctx->samplerate/1024;
     
     while(nf > 0)
 	{
-		if(dtstream_read(dem_ctx->stream_priv,aac_ctx->buf, 8) < 8)
+		if(stream->read(aac_ctx->buf, 8) < 8)
 			break;
 		len = aac_parse_frame(aac_ctx->buf, &srate, &num);
 		if(len <= 0)
 		{
-			dtstream_skip(dem_ctx->stream_priv, -7);
+			stream->skip(-7);
 			continue;
 		}
-		dtstream_skip(dem_ctx->stream_priv, len - 8);
+		stream->skip(len - 8);
 		aac_ctx->last_pts += (float) (num*1024.0/srate);
 		nf -= num;
 	}

@@ -3,38 +3,52 @@
 
 #define TAG "STREAM_API"
 
-int dtstream_open (void **priv, dtstream_para_t * para, void *parent)
+dtstream* open_stream_module()
+{
+	dtstream *stream = new dtstream;
+	module_stream *mod_stream = new module_stream;
+	
+	stream->open = std::bind(&module_stream::dtstream_open,mod_stream,std::placeholders::_1);
+	stream->eof = std::bind(&module_stream::dtstream_eof,mod_stream);
+	stream->tell = std::bind(&module_stream::dtstream_tell,mod_stream);
+	stream->get_size = std::bind(&module_stream::dtstream_get_size,mod_stream);
+	stream->skip = std::bind(&module_stream::dtstream_skip,mod_stream,std::placeholders::_1);
+	stream->read = std::bind(&module_stream::dtstream_read,mod_stream,std::placeholders::_1,std::placeholders::_2);
+	stream->seek = std::bind(&module_stream::dtstream_seek,mod_stream,std::placeholders::_1,std::placeholders::_2);
+	stream->close = std::bind(&module_stream::dtstream_close,mod_stream);
+	
+	mod_stream->stream_ext = stream;
+    dt_info(TAG,"OPEN PORT MODULE ok \n");
+	return stream;
+}
+
+int module_stream::dtstream_open (dtstream_para_t * para)
 {
 	dtstream_para_t &spara = *para;
-    dtstream_context_t *ctx = new dtstream_context(spara);
-    if(ctx->stream_open() == -1)
+    stm_ctx = new dtstream_context(spara);
+	stm_ctx->parent = this;
+    if(stm_ctx->stream_open() == -1)
     {
         dt_error(TAG,"STREAM CONTEXT OPEN FAILED \n");
-        free(ctx);
-        *priv = NULL;
+        free(stm_ctx);
         return -1;
     }
-    *priv = (void *)ctx;
-    ctx->parent = parent;
     dt_info(TAG,"STREAM CTX OPEN SUCCESS\n");
     return 0;
 }
 
-int64_t dtstream_get_size(void *priv)
+int64_t module_stream::dtstream_get_size()
 {
-    dtstream_context_t *stm_ctx = (dtstream_context_t *) priv;
     return stm_ctx->stream_get_size();
 }
 
-int dtstream_eof (void *priv)
+int module_stream::dtstream_eof ()
 {
-    dtstream_context_t *stm_ctx = (dtstream_context_t *) priv;
     return stm_ctx->stream_eof();
 }
 
-int64_t dtstream_tell (void *priv)
+int64_t module_stream::dtstream_tell ()
 {
-    dtstream_context_t *stm_ctx = (dtstream_context_t *) priv;
     return stm_ctx->stream_tell();
 }
 
@@ -43,33 +57,27 @@ int64_t dtstream_tell (void *priv)
  * maybe negitive , then seek forward
  *
  * */
-int dtstream_skip (void *priv, int64_t size)
+int module_stream::dtstream_skip (int64_t size)
 {
-    dtstream_context_t *stm_ctx = (dtstream_context_t *) priv;
-    stm_ctx->stream_seek(size,SEEK_CUR);
-    return 1;
+    return stm_ctx->stream_seek(size,SEEK_CUR);
 }
 
-int dtstream_read (void *priv, uint8_t *buf,int len)
+int module_stream::dtstream_read (uint8_t *buf,int len)
 {
-    dtstream_context_t *stm_ctx = (dtstream_context_t *) priv;
     return stm_ctx->stream_read(buf,len);
 }
 
-int dtstream_seek (void *priv, int64_t pos ,int whence)
+int module_stream::dtstream_seek (int64_t pos ,int whence)
 {
-    dtstream_context_t *stm_ctx = (dtstream_context_t *) priv;
     return stm_ctx->stream_seek(pos,whence);
 }
 
-int dtstream_close (void *priv)
+int module_stream::dtstream_close ()
 {
-    dtstream_context_t *stm_ctx = (dtstream_context_t *) priv;
     if(stm_ctx)
     {
         stm_ctx->stream_close();
         delete(stm_ctx);
     }
-    priv = NULL;
     return 0;
 }
