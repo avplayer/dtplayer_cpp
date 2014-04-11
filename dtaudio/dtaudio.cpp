@@ -121,7 +121,7 @@ int dtaudio_context::audio_drop (int64_t target_pts)
     int sample_rate = actx->audio_param.samplerate;
     int bps = actx->audio_param.bps;
     int size = (diff * sample_rate * bps * channel / 8) / 90000;
-
+	size = size - size%16;
     dt_info (TAG, "[%s:%d]Target:%lld ,Need to drop :%d pcm \n", __FUNCTION__, __LINE__, target_pts, size);
     int read_size_once = 1024;
     uint8_t buf[1024];
