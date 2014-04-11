@@ -56,14 +56,42 @@ typedef struct dtplayer_para
     int (*update_cb) (player_state_t * sta);
 } dtplayer_para_t;
 
-dtplayer_para_t *dtplayer_alloc_para ();
-int dtplayer_release_para (dtplayer_para_t * para);
-int dtplayer_init (void **priv, dtplayer_para_t * para);
-int dtplayer_start (void *player_priv);
-int dtplayer_pause (void *player_priv);
-int dtplayer_resume (void *player_priv);
-int dtplayer_stop (void *player_priv);
-int dtplayer_seek (void *player_priv, int s_time);
-int dtplayer_get_states (void *player_priv, player_state_t * state);
+class dtplayer
+{
+public:
+	dtplayer(){};
+	std::function<dtplayer_para_t *()>alloc_para;
+	std::function<int (dtplayer_para_t * para)>release_para;
+	
+	std::function<int (dtplayer_para_t * para)>init;
+	std::function<int ()>start;
+	std::function<int ()>pause;
+	std::function<int ()>resume;
+	std::function<int ()>stop;
+	std::function<int (int s_time)>seek;
+	std::function<int (player_state_t * state)>get_state;
+};
+
+struct dtplayer_context;
+
+class module_player
+{
+public:
+	dtplayer *player_ext;
+	struct dtplayer_context *dtp_ctx;
+
+	dtplayer_para_t *dtplayer_alloc_para ();
+	int dtplayer_release_para (dtplayer_para_t * para);
+	
+	int dtplayer_init (dtplayer_para_t * para);
+	int dtplayer_start ();
+	int dtplayer_pause ();
+	int dtplayer_resume ();
+	int dtplayer_stop ();
+	int dtplayer_seek (int s_time);
+	int dtplayer_get_states (player_state_t * state);
+};
+
+dtplayer *open_player_module();
 
 #endif

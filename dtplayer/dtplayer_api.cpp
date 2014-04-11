@@ -5,7 +5,26 @@
 
 #define TAG "PLAYER-API"
 
-dtplayer_para_t *dtplayer_alloc_para ()
+dtplayer* open_player_module()
+{
+	dtplayer *player = new dtplayer;
+	module_player *mod_player = new module_player;
+	player->alloc_para = std::bind(&module_player::dtplayer_alloc_para,mod_player);
+	player->release_para = std::bind(&module_player::dtplayer_release_para,mod_player,std::placeholders::_1);
+	player->init = std::bind(&module_player::dtplayer_init,mod_player,std::placeholders::_1);
+	player->start = std::bind(&module_player::dtplayer_start,mod_player);
+	player->pause = std::bind(&module_player::dtplayer_pause,mod_player);
+	player->resume = std::bind(&module_player::dtplayer_resume,mod_player);
+	player->stop = std::bind(&module_player::dtplayer_stop,mod_player);
+    player->seek = std::bind(&module_player::dtplayer_seek,mod_player,std::placeholders::_1);
+	player->get_state = std::bind(&module_player::dtplayer_get_states,mod_player,std::placeholders::_1);
+	
+	mod_player->player_ext = player;
+    dt_info(TAG,"OPEN PORT MODULE ok \n");
+    return player;
+}
+
+dtplayer_para_t *module_player::dtplayer_alloc_para ()
 {
     dtplayer_para_t *para = (dtplayer_para_t *) malloc (sizeof (dtplayer_para_t));
     if (!para)
@@ -22,7 +41,7 @@ dtplayer_para_t *dtplayer_alloc_para ()
     return para;
 }
 
-int dtplayer_release_para (dtplayer_para_t * para)
+int module_player::dtplayer_release_para (dtplayer_para_t * para)
 {
     if (para)
         free (para);
@@ -30,7 +49,7 @@ int dtplayer_release_para (dtplayer_para_t * para)
     return 0;
 }
 
-int dtplayer_init (void **player_priv, dtplayer_para_t * para)
+int module_player::dtplayer_init (dtplayer_para_t * para)
 {
     int ret = 0;
     if (!para)
@@ -38,7 +57,7 @@ int dtplayer_init (void **player_priv, dtplayer_para_t * para)
     player_register_all();
 	
 	dtplayer_para_t &ppara = *para;
-    dtplayer_context_t *dtp_ctx = new dtplayer_context(ppara);
+    dtp_ctx = new dtplayer_context(ppara);
     if (!dtp_ctx)
     {
         dt_error (TAG, "dtplayer context malloc failed \n");
@@ -54,11 +73,10 @@ int dtplayer_init (void **player_priv, dtplayer_para_t * para)
         dt_error (TAG, "PLAYER INIT FAILED \n");
         return -1;
     }
-    *player_priv = dtp_ctx;
     return 0;
 }
 
-int dtplayer_start (void *player_priv)
+int module_player::dtplayer_start ()
 {
     event_t *event = dt_alloc_event ();
     event->next = NULL;
@@ -68,7 +86,7 @@ int dtplayer_start (void *player_priv)
     return 0;
 }
 
-int dtplayer_pause (void *player_priv)
+int module_player::dtplayer_pause ()
 {
     event_t *event = dt_alloc_event ();
     event->next = NULL;
@@ -79,7 +97,7 @@ int dtplayer_pause (void *player_priv)
     return 0;
 }
 
-int dtplayer_resume (void *player_priv)
+int module_player::dtplayer_resume ()
 {
     event_t *event = dt_alloc_event ();
     event->next = NULL;
@@ -90,9 +108,8 @@ int dtplayer_resume (void *player_priv)
     return 0;
 }
 
-int dtplayer_stop (void *player_priv)
+int module_player::dtplayer_stop ()
 {
-    dtplayer_context_t *dtp_ctx = (dtplayer_context_t *) player_priv;
     event_t *event = dt_alloc_event ();
     event->next = NULL;
     event->server_id = EVENT_SERVER_PLAYER;
@@ -102,14 +119,11 @@ int dtplayer_stop (void *player_priv)
     /*need to wait until player stop ok */
 	dtp_ctx->event_loop_thread.join();
 	delete(dtp_ctx);
-	player_priv = nullptr;
     return 0;
 }
 
-int dtplayer_seek (void *player_priv, int s_time)
+int module_player::dtplayer_seek (int s_time)
 {
-    dtplayer_context_t *dtp_ctx = (dtplayer_context_t *) player_priv;
-
     //get current time
     int64_t current_time = dtp_ctx->state.cur_time;
     int64_t full_time = dtp_ctx->media_info->duration;
@@ -128,9 +142,8 @@ int dtplayer_seek (void *player_priv, int s_time)
     return 0;
 }
 
-int dtplayer_get_states (void *player_priv, player_state_t * state)
+int module_player::dtplayer_get_states (player_state_t * state)
 {
-    dtplayer_context_t *dtp_ctx = (dtplayer_context_t *) player_priv;
     memcpy (state, &dtp_ctx->state, sizeof (player_state_t));
     return 0;
 }

@@ -11,6 +11,7 @@
 static int exit_flag = 0;
 static void event_loop (void *arg)
 {
+	dtplayer *player = (dtplayer *)arg;
     char buf[128];
     int len;
     int exit_flag = 0;
@@ -26,11 +27,11 @@ static void event_loop (void *arg)
             {
             case 'q':
             case 27:           /* esc */
-                dtplayer_stop (arg);
+				player->stop();
                 exit_flag = 1;
                 break;
             case 32:           /* space */
-                dtplayer_pause (arg);
+				player->pause();
                 break;
             }
         }
@@ -40,22 +41,22 @@ static void event_loop (void *arg)
             if (0x1b == buf[0] && 0x5b == buf[1] && 0x44 == buf[2])
             {
                 dt_info (TAG "[%s:%d]enter < key \n", __FUNCTION__, __LINE__);
-                dtplayer_seek (arg, -10);
+				player->seek(-10);
             }
             if (0x1b == buf[0] && 0x5b == buf[1] && 0x43 == buf[2])
             {
                 dt_info (TAG "[%s:%d]enter > key \n", __FUNCTION__, __LINE__);
-                dtplayer_seek (arg, 10);
+				player->seek(10);
             }
             if (0x1b == buf[0] && 0x5b == buf[1] && 0x35 == buf[2])
             {
                 dt_info (TAG, "[%s:%d]enter pgup key \n", __FUNCTION__, __LINE__);
-                dtplayer_seek (arg, -60);
+				player->seek(-60);
             }
             if (0x1b == buf[0] && 0x5b == buf[1] && 0x36 == buf[2])
             {
                 dt_info (TAG, "[%s:%d]enter pgdown key \n", __FUNCTION__, __LINE__);
-                dtplayer_seek (arg, 10);
+				player->seek(10);
             }
         }
         usleep (10000);
@@ -85,8 +86,8 @@ int main (int argc, char **argv)
         return 0;
     }
 
-    void *player_priv;
-    dtplayer_para_t *para = dtplayer_alloc_para ();
+	dtplayer *player = open_player_module();
+    dtplayer_para_t *para = player->alloc_para ();
     if (!para)
         return -1;
     strcpy (para->file_name, argv[1]);
@@ -95,14 +96,13 @@ int main (int argc, char **argv)
     //para->no_video=1;
     para->width = 720;
     para->height = 480;
-    ret = dtplayer_init (&player_priv, para);
+	ret = player->init(para);
     if (ret < 0)
         return -1;
-
-    dtplayer_release_para (para);
-    dtplayer_start (player_priv);
+	player->release_para(para);
+	player->start();
     //here enter cmd loop
-    event_loop (player_priv);
+    event_loop (player);
     dt_info ("", "QUIT DTPLAYER-TEST\n");
     return 0;
 }
