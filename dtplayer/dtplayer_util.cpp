@@ -105,7 +105,6 @@ int dtplayer_context::player_host_init ()
     }
     //----sub part------
     /* init dthost */
-    this->host_priv = NULL;
     ret = this->host_ext->init (host_para);
     if (ret < 0)
     {

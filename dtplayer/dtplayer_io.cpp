@@ -14,7 +14,7 @@ static void *player_io_thread (dtplayer_context_t * dtp_ctx);
 
 static int player_read_frame (dtplayer_context_t * dtp_ctx, dt_av_frame_t * frame)
 {
-    return dtdemuxer_read_frame (dtp_ctx->demuxer_priv, frame);
+	return dtp_ctx->demux_ext->read_frame(frame);
 }
 
 static int player_write_frame (dtplayer_context_t * dtp_ctx, dt_av_frame_t * frame)

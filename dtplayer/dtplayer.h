@@ -6,6 +6,7 @@
 #include "dthost_api.h"
 #include "dt_av.h"
 #include "dt_event.h"
+#include "dtdemuxer_api.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -47,12 +48,11 @@ typedef struct dtplayer_context
 {
     dtplayer_para_t player_para;
 
-    void *demuxer_priv;
+	dtdemux *demux_ext;
     dt_media_info_t *media_info;
 
     player_ctrl_t ctrl_info;
     dthost_para_t host_para;
-    void *host_priv;
 	dthost *host_ext;
 
     player_state_t state;

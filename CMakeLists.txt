@@ -35,6 +35,7 @@ include_directories(${SDL2_INCLUDE_DIR})
 include_directories(dtutils)
 include_directories(dtplayer)
 include_directories(dthost)
+include_directories(dtdemux)
 
 add_subdirectory(dtutils)
 add_subdirectory(dtplayer)

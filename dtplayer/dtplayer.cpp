@@ -35,8 +35,8 @@ dtplayer_context::dtplayer_context(dtplayer_para_t& para)
 	player_para.video_index = para.video_index;
 	player_para.width = para.width;
 	
-	demuxer_priv = nullptr;
-	host_priv = nullptr;
+	demux_ext = nullptr;
+	host_ext = nullptr;
 	player_server = nullptr;	
 }
 
@@ -142,13 +142,14 @@ int dtplayer_context::player_init ()
 
     dtdemuxer_para_t demux_para;
     demux_para.file_name = this->player_para.file_name;
-    ret = dtdemuxer_open (&this->demuxer_priv, &demux_para, this);
+	demux_ext = open_demux_module();
+	ret = demux_ext->open(&demux_para);
     if (ret < 0)
     {
         ret = -1;
         goto ERR1;
     }
-    this->media_info = dtdemuxer_get_media_info (this->demuxer_priv);
+    this->media_info = demux_ext->get_media_info ();
 
     /* setup player ctrl info */
     para = &this->player_para;
@@ -225,7 +226,7 @@ int dtplayer_context::player_init ()
     this->player_handle_cb ();
     return 0;
   ERR2:
-    dtdemuxer_close (this->demuxer_priv);
+	demux_ext->close();
   ERR1:
     this->player_server_release ();
     this->set_player_status (PLAYER_STATUS_ERROR);
@@ -309,7 +310,7 @@ int dtplayer_context::player_seekto (int seek_time)
     this->set_player_status (PLAYER_STATUS_SEEK_ENTER);
     pause_io_thread ();
     player_host_pause ();
-    int ret = dtdemuxer_seekto (this->demuxer_priv, seek_time);
+	int ret = demux_ext->seekto(seek_time);
     if (ret == -1)
         goto FAIL;
     player_host_stop ();
@@ -397,7 +398,7 @@ static void *event_handle_loop (dtplayer_context_t * dtp_ctx)
   QUIT:
     dtp_ctx->stop_io_thread ();
     dtp_ctx->player_host_stop ();
-    dtdemuxer_close (dtp_ctx->demuxer_priv);
+	dtp_ctx->demux_ext->close();
     dtp_ctx->player_server_release ();
     dt_event_server_release ();
     dt_info (TAG, "EXIT PLAYER EVENT HANDLE LOOP\n");
