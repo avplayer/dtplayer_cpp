@@ -96,6 +96,5 @@ int main (int argc, char **argv)
     render_stop();
     ui_stop(); 
     dt_info ("", "QUIT DTPLAYER-TEST\n");
-    dt_info ("", "QUIT DTPLAYER-TEST\n");
     return 0;
 }

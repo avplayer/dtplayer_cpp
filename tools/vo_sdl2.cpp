@@ -22,16 +22,17 @@ static int sdl2_pre_init (sdl2_ctx_t *ctx)
 {
     int flags;
     
-    putenv ("SDL_VIDEO_WINDOW_POS=center");
-    putenv ("SDL_VIDEO_CENTERED=1");
+    //putenv ("SDL_VIDEO_WINDOW_POS=center");
+    //putenv ("SDL_VIDEO_CENTERED=1");
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         SDL_Init(SDL_INIT_VIDEO);
-   
+   #if 0
     ctx->dx = ctx->dy = 0;
     //ctx->dw = vo->para.d_width;
     //ctx->dh = vo->para.d_height;
     ctx->dw = 720;
     ctx->dh = 480;
+
 
     flags = SDL_WINDOW_SHOWN; 
     ctx->win = SDL_CreateWindow("dtplayer",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,ctx->dw,ctx->dh,flags);
@@ -40,6 +41,7 @@ static int sdl2_pre_init (sdl2_ctx_t *ctx)
         dt_error(TAG,"SDL_CreateWindow Error:%s \n",SDL_GetError());
         return 1;
     }
+    
     flags = SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED; 
     ctx->ren = SDL_CreateRenderer(ctx->win,-1,0);
     if(ctx->ren == NULL)
@@ -55,6 +57,7 @@ static int sdl2_pre_init (sdl2_ctx_t *ctx)
         dt_error(TAG,"SDL_CreateTexture Error:%s \n",SDL_GetError());
         return 1;
     }
+#endif
 
     dt_info (TAG, "sdl2 pre init OK\n");
     return 0;
@@ -69,6 +72,22 @@ int sdl2_init()
         return -1;
     }
     memset(&sdl2_ctx,0,sizeof(sdl2_ctx_t));
+	
+	
+	flags = SDL_WINDOW_SHOWN; 
+	sdl2_ctx_t *ctx = &sdl2_ctx;
+	ctx->dx = ctx->dy = 0;
+    //ctx->dw = vo->para.d_width;
+    //ctx->dh = vo->para.d_height;
+    ctx->dw = 720;
+    ctx->dh = 480;
+    ctx->win = SDL_CreateWindow("dtplayer",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,ctx->dw,ctx->dh,flags);
+    if(ctx->win == NULL)
+    {
+        dt_error(TAG,"SDL_CreateWindow Error:%s \n",SDL_GetError());
+        return 1;
+    }
+	dt_info(TAG,"CREATE WIN OK\n");
     return 0;
 }
 

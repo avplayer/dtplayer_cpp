@@ -9,7 +9,8 @@ dtplayer* open_player_module()
 {
 	dtplayer *player = new dtplayer;
 	module_player *mod_player = new module_player;
-	player->alloc_para = std::bind(&module_player::dtplayer_alloc_para,mod_player);
+	
+    player->alloc_para = std::bind(&module_player::dtplayer_alloc_para,mod_player);
 	player->release_para = std::bind(&module_player::dtplayer_release_para,mod_player,std::placeholders::_1);
 	player->init = std::bind(&module_player::dtplayer_init,mod_player,std::placeholders::_1);
 	player->start = std::bind(&module_player::dtplayer_start,mod_player);
