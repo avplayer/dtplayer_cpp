@@ -2,6 +2,7 @@
 #define DTPLAYER_API_H
 
 #include "dt_av.h"
+#include <functional>
 
 typedef enum
 {

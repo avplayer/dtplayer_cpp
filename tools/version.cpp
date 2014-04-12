@@ -2,7 +2,7 @@
 
 #include "dt_utils.h"
 
-static char *version_tags = "";
+static char *version_tags = "V-INFO";
 
 void version_info (void)
 {

@@ -3,6 +3,7 @@
 
 #include "dt_av.h"
 #include "dt_media_info.h"
+#include <functional>
 
 typedef struct
 {

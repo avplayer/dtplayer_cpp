@@ -2,6 +2,7 @@
 #define DTSTREAM_API_H
 
 #include "dt_av.h"
+#include <functional>
 
 typedef struct
 {

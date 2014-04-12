@@ -50,7 +50,7 @@ static int stream_select (dtstream_context_t * stm_ctx)
 		if ((it->id ==  id) || (it->id == STREAM_FFMPEG))
 		{
 			stm_ctx->stream = &(*it);
-		    dt_info(TAG,"SELECT VO:%s \n",stm_ctx->stream->name);
+		    dt_debug(TAG,"SELECT stream:%s \n",stm_ctx->stream->name);
 			return 0;
 		}
 	}

@@ -16,7 +16,7 @@ dtdemux* open_demux_module()
 	demux->seekto = std::bind(&module_demux::dtdemuxer_seekto,mod_demux,std::placeholders::_1);
     
 	mod_demux->demux_ext = demux;
-    dt_info(TAG,"OPEN PORT MODULE ok \n");
+    dt_info(TAG,"OPEN DEMUX MODULE ok \n");
     return demux;
 }
 

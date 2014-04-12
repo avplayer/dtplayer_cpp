@@ -1,18 +1,23 @@
 #include "ui.h"
 #include <SDL2/SDL.h>
+#include "dt_log.h"
+
+#define TAG "Ui"
 
 int sdl2_init();
 int sdl2_stop();
 
 int ui_init()
 {
-    sdl2_init();    
+    sdl2_init();
+	dt_info(TAG,"UI INIT OK\n");
     return 0;
 }
 
 int ui_stop()
 {
-    sdl2_stop(); 
+    sdl2_stop();
+	dt_info(TAG,"UI STOP OK\n");
     return 0;
 }
 

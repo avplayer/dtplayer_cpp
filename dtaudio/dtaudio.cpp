@@ -106,7 +106,7 @@ int64_t dtaudio_context::audio_get_first_pts ()
     if(!this->audio_dec)
         dt_info(TAG,"GET FIRST PTS audio dec null \n");
     else
-        dt_info(TAG,"GET FIRST PTS :%lld\n",this->audio_dec->pts_first);
+        dt_debug(TAG,"GET FIRST PTS :%lld\n",this->audio_dec->pts_first);
 
     return this->audio_dec->pts_first;
 }

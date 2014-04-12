@@ -38,7 +38,7 @@ static int sdl2_pre_init (sdl2_ctx_t *ctx)
     if(ctx->win == NULL)
     {
         dt_error(TAG,"SDL_CreateWindow Error:%s \n",SDL_GetError());
-        return -1;
+        return 1;
     }
     flags = SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED; 
     ctx->ren = SDL_CreateRenderer(ctx->win,-1,0);
@@ -81,8 +81,8 @@ int sdl2_stop()
         SDL_DestroyTexture(ctx->tex);
         SDL_DestroyRenderer(ctx->ren); 
         SDL_DestroyWindow(ctx->win);
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
     }
+    SDL_Quit();
     ctx->sdl_inited = 0;
     ctx->mux_vo.unlock();
     return 0;
@@ -116,23 +116,12 @@ static int vo_sdl2_render (vo_wrapper_t *wrapper, AVPicture_t * pict)
     dst.w = ctx->dw;
     dst.h = ctx->dh;
 
-    if(ctx->ren)
-        SDL_DestroyRenderer(ctx->ren); 
-    ctx->ren = SDL_CreateRenderer(ctx->win,-1,0);
-    if(ctx->ren == NULL)
-    {
-        dt_error(TAG,"SDL_CreateRenderer Error:%s \n",SDL_GetError());
-        return 1;
-    }
-    if(ctx->tex)    
-        SDL_DestroyTexture(ctx->tex);
+    if(ctx->ren == nullptr)
+        ctx->ren = SDL_CreateRenderer(ctx->win,-1,0);
+
+    if(ctx->tex == nullptr)
+		ctx->tex = SDL_CreateTexture(ctx->ren,SDL_PIXELFORMAT_YV12,SDL_TEXTUREACCESS_STREAMING,ctx->dw,ctx->dh);
     //ctx->tex = SDL_CreateTexture(ctx->ren,SDL_PIXELFORMAT_YV12,SDL_TEXTUREACCESS_STATIC,ctx->dw,ctx->dh);
-    ctx->tex = SDL_CreateTexture(ctx->ren,SDL_PIXELFORMAT_YV12,SDL_TEXTUREACCESS_STREAMING,ctx->dw,ctx->dh);
-    if(ctx->tex == NULL)
-    {
-        dt_error(TAG,"SDL_CreateTexture Error:%s \n",SDL_GetError());
-        return 1;
-    }
 
     SDL_UpdateYUVTexture(ctx->tex,NULL, pict->data[0], pict->linesize[0],  pict->data[1], pict->linesize[1],  pict->data[2], pict->linesize[2]);
     //SDL_UpdateTexture(ctx->tex, &dst, pict->data[0], pict->linesize[0]);
@@ -146,7 +135,18 @@ static int vo_sdl2_render (vo_wrapper_t *wrapper, AVPicture_t * pict)
 
 static int vo_sdl2_stop (vo_wrapper_t *wrapper)
 {
-    wrapper->handle = NULL;
+	sdl2_ctx_t *ctx = (sdl2_ctx_t *)wrapper->handle;
+	if(ctx->ren)
+	{
+		SDL_DestroyRenderer(ctx->ren);
+		ctx->ren = nullptr;
+	}
+	if(ctx->tex)
+	{
+		SDL_DestroyTexture(ctx->tex);
+		ctx->tex = nullptr;
+	}
+	wrapper->handle = nullptr;
     dt_info (TAG, "stop vo sdl\n");
     return 0;
 }

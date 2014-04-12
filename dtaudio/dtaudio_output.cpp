@@ -31,10 +31,6 @@ void aout_register_all ()
     REGISTER_AO (SDL, sdl);
 #endif
 
-#ifdef ENABLE_AO_SDL2
-    REGISTER_AO (SDL2, sdl2);
-#endif
-
 #ifdef ENABLE_AO_ALSA
     REGISTER_AO (ALSA, alsa);
 #endif
@@ -45,7 +41,7 @@ void aout_register_all ()
 /*default alsa*/
 static int select_ao_device (dtaudio_output_t * ao, int id)
 {
-    if(id == -1) // user did not choose vo,use default one
+    if(id == -1) // user did not choose ao,use default one
     {
         if(ao_wrappers.empty())
             return -1;
@@ -215,9 +211,9 @@ int dtaudio_output::audio_output_init (int ao_id)
     /*select ao device */
     ret = select_ao_device (this, ao_id);
     if (ret < 0)
-        return -1;
-    
+        return -1;	    
     ao_wrapper_t *wrapper = this->aout_ops;
+	dt_info(TAG,"SELECT AO:%s \n",wrapper->name);
     wrapper->ao_init (wrapper,this);
     dt_info (TAG, "[%s:%d] audio output init success\n", __FUNCTION__, __LINE__);
     

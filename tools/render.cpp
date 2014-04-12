@@ -5,6 +5,8 @@
 #include "dtvideo.h"
 #include "dtvideo_output.h"
 
+#define TAG "RENDER"
+
 /*---------------------------------------------------------- */
 
 extern vo_wrapper_t vo_sdl2_ops;
@@ -73,12 +75,13 @@ int render_init()
 {
     register_ext_ao(ao_ex_ops);
     register_ext_vo(vo_ex_ops); 
-
+	dt_info(TAG,"RENDER INIT OK \n");
     return  0;
 }
 
 int render_stop()
 {
+	dt_info(TAG,"RENDER STOP OK \n");
     return 0;
 }
 

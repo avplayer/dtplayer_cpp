@@ -18,7 +18,7 @@ dtstream* open_stream_module()
 	stream->close = std::bind(&module_stream::dtstream_close,mod_stream);
 	
 	mod_stream->stream_ext = stream;
-    dt_info(TAG,"OPEN PORT MODULE ok \n");
+    dt_info(TAG,"OPEN STREAM MODULE ok \n");
 	return stream;
 }
 

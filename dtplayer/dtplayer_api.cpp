@@ -20,7 +20,7 @@ dtplayer* open_player_module()
 	player->get_state = std::bind(&module_player::dtplayer_get_states,mod_player,std::placeholders::_1);
 	
 	mod_player->player_ext = player;
-    dt_info(TAG,"OPEN PORT MODULE ok \n");
+    dt_info(TAG,"OPEN PLAYER MODULE ok \n");
     return player;
 }
 
@@ -54,7 +54,6 @@ int module_player::dtplayer_init (dtplayer_para_t * para)
     int ret = 0;
     if (!para)
         return -1;
-    player_register_all();
 	
 	dtplayer_para_t &ppara = *para;
     dtp_ctx = new dtplayer_context(ppara);
