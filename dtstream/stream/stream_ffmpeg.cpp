@@ -33,7 +33,7 @@ static int stream_ffmpeg_open (stream_wrapper_t * wrapper,char *stream_name)
     size = dummy ? 0 : avio_size(ctx);
     info->stream_size = size;
     info->seek_support = ctx->seekable;
-    
+    dt_info(TAG,"stream ffmpeg open ok, size:%lld seekable:%d \n",size,ctx->seekable);
     return DTERROR_NONE;
 }
 
@@ -53,7 +53,13 @@ static int stream_ffmpeg_seek (stream_wrapper_t * wrapper, int64_t pos, int when
 {
     AVIOContext *ctx = (AVIOContext *)wrapper->stream_priv;
     stream_ctrl_t *info = &wrapper->info;
-    if (avio_seek(ctx, pos, whence) < 0) {
+
+	if(whence == AVSEEK_SIZE)
+	{
+		dt_debug(TAG,"GET SIZE:%d \n",info->stream_size);
+		return info->stream_size;
+	}
+	if (avio_seek(ctx, pos, whence) < 0) {
         info->eof_flag = 1;
         return -1;
     }

@@ -20,7 +20,7 @@ static void register_demuxer (const demuxer_wrapper_t & wrapper)
 
 void demuxer_register_all ()
 {
-    REGISTER_DEMUXER (AAC, aac);
+    //REGISTER_DEMUXER (AAC, aac);
 #ifdef ENABLE_DEMUXER_FFMPEG
     REGISTER_DEMUXER (FFMPEG, ffmpeg);
 #endif
@@ -97,7 +97,7 @@ int dtdemuxer_context::demuxer_open ()
     }
    
     char value[512];
-    int probe_enable = 0;
+    int probe_enable = 1; //default enable probe
     int probe_size = PROBE_BUF_SIZE;
     if(GetEnv("DEMUXER","demuxer.probe",value) > 0)
     {

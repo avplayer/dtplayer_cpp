@@ -9,6 +9,8 @@
 
 #define TAG "STREAM-FILE"
 
+#define AVSEEK_SIZE 0x10000
+
 typedef struct{
     int fd;
     int64_t file_size;
@@ -59,7 +61,14 @@ static int stream_file_seek (stream_wrapper_t * wrapper, int64_t pos, int whence
 {
     file_ctx_t *ctx = (file_ctx_t *)wrapper->stream_priv;
     stream_ctrl_t *info = &wrapper->info;
-    if(lseek(ctx->fd,pos,whence)<0)
+    
+	if(whence == AVSEEK_SIZE)
+	{
+		dt_debug(TAG,"GET SIZE:%d \n",info->stream_size);
+		return info->stream_size;
+	}
+	
+	if(lseek(ctx->fd,pos,whence)<0)
         return -1;
     if(whence == SEEK_SET)
         info->cur_pos = pos;

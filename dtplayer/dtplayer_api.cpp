@@ -128,6 +128,7 @@ int module_player::dtplayer_seek (int s_time)
     int64_t current_time = dtp_ctx->state.cur_time;
     int64_t full_time = dtp_ctx->media_info->duration;
     int seek_time = current_time + s_time;
+	dt_info(TAG,"SEEK TO %d S\n",seek_time);
     if (seek_time < 0)
         seek_time = 0;
     if (seek_time > full_time)

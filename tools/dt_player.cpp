@@ -63,9 +63,7 @@ int main (int argc, char **argv)
     {
         if(exit_flag == 1)
             break;
-		dt_info(TAG,"START GET EVENT \n");
         event = get_event(&arg);
-		dt_info(TAG,"GET EVENT id:%d \n",event);
         if(event == EVENT_NONE)
         {
             usleep(100000);
