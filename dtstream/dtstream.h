@@ -11,6 +11,7 @@
 typedef enum{
     STREAM_INVALID = -1,
     STREAM_FILE,
+    STREAM_BT,
     STREAM_FFMPEG,
     STREAM_UNSUPPORT
 }stream_format_t;

@@ -23,6 +23,7 @@ find_package( SDL2  REQUIRED)
 find_package( faad )
 find_package( faac )
 find_package( Threads )
+find_package( torrent )
 
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-D__STDC_LIMIT_MACROS)

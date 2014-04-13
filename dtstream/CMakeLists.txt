@@ -5,6 +5,8 @@ include_directories(../dtaudio)
 include_directories(../dtvideo)
 include_directories(../dtport)
 
+include_directories(${BT_INCLUDE_DIR})
+
 aux_source_directory( . LIBSTREAMSOURCES)
 
 add_definitions(-DENABLE_STREAM_FILE)
@@ -12,6 +14,10 @@ add_definitions(-DENABLE_STREAM_FILE)
 if (FFMPEG_FOUND)
 list(APPEND LIBSTREAMSOURCES stream/stream_ffmpeg.cpp)
 add_definitions(-DENABLE_STREAM_FFMPEG)
+endif()
+
+if (BT_FOUND)
+list(APPEND LIBSTREAMSOURCES stream/stream_bt.cpp)
 endif()
 
 add_library(dtstream STATIC ${LIBSTREAMSOURCES} stream/stream_file.cpp)
