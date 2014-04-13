@@ -1,4 +1,7 @@
 
+find_package( CURL )
+find_package( Boost )
+
 include_directories(../dtdemux)
 include_directories(../dtstream)
 include_directories(../dtaudio)
@@ -24,4 +27,8 @@ add_library(dtstream STATIC ${LIBSTREAMSOURCES} stream/stream_file.cpp)
 
 if(FFMPEG_FOUND)
 target_link_libraries(dtstream ${FFMPEG_LIBRARIES})
+endif()
+
+if(${BT_FOUND})
+target_link_libraries( dtstream ${BT_LIBRARY} ${Boost_LIBRARIES})
 endif()

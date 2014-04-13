@@ -38,7 +38,7 @@ find_library( BT_LIBRARY
 
 if(BT_LIBRARY)
 message(STATUS "Found LibTorrent: ${BT_LIBRARY}, ${BT_INCLUDE_DIR}")
-add_definitions(-DBOOST_ASIO_DYN_LINK)
+add_definitions(-DUSE_TORRENT -DANSI_TERMINAL_COLORS -DBOOST_ASIO_DYN_LINK)
 set( BT_FOUND "YES" )
 endif(BT_LIBRARY)
 
