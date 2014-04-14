@@ -54,5 +54,3 @@ add_subdirectory(dtaudio)
 add_executable(dtmplayer tools/dt_player.cpp tools/version.cpp tools/ao_sdl2.cpp tools/vo_sdl2.cpp tools/ui.cpp tools/render.cpp)
 target_link_libraries(dtmplayer ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(dtmplayer dtplayercore  dthost dtport dtdemux dtstream dtvideo dtaudio dtutils)
-
-

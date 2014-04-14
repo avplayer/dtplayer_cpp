@@ -1,5 +1,5 @@
-
 #include <vector>
+#include <unistd.h>
 
 #include "dtdemuxer.h"
 #include "dtstream_api.h"
@@ -125,9 +125,21 @@ int dtdemuxer_context::demuxer_open ()
         if(ret < 0)
             return -1; 
 		dt_info(TAG," buf init ok \n");
-		ret = stream_ext->read(this->probe_buf->data,probe_size);
-        if(ret <= 0)
-            return -1;
+		
+		int rlen = probe_size;
+		int off = 0;
+		while(1)
+		{			
+			ret = stream_ext->read(this->probe_buf->data + off,rlen);
+			if(ret < 0)
+				return -1;
+			rlen -= ret;
+			off += ret;
+			if(!rlen)
+				break;
+ 			usleep(1000);
+		}
+		
         this->probe_buf->level = ret;
 		ret = stream_ext->seek(old_pos,SEEK_SET);
         dt_info(TAG,"seek back to:%lld ret:%d \n",old_pos,ret);
