@@ -12,7 +12,7 @@ dtplayer is based on C++ , aimed to provide multimedia playing service base on f
 
 At present, dtplayer have provided examples on stream-demuxer-decoder-render modules. User can easily understand how to add new element.
 
-if cmake does not detect a ffmpeg install but detect a faac install,
+if cmake does not detect a ffmpeg install but detect a faad install,
 then you will get a aac player.
 
 Compile

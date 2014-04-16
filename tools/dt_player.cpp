@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define TAG "DTM-PLAYER"
+#define TAG "DT-PLAYER"
 
 static int exit_flag = 0;
 
@@ -30,7 +30,7 @@ int main (int argc, char **argv)
     version_info ();
     if (argc < 2)
     {
-        dt_info ("", " no enough args\n");
+        //dt_info (TAG, " no enough args\n");
         show_usage ();
         return 0;
     }
