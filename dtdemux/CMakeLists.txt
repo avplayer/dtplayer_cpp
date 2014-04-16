@@ -20,7 +20,3 @@ add_library(dtdemux STATIC ${LIBDEMUXSOURCES} )
 if(FFMPEG_FOUND)
 target_link_libraries(dtdemux ${FFMPEG_LIBRARIES})
 endif()
-
-if(FAAC_FOUND)
-target_link_libraries(dtdemux ${FAAC_LIBRARY})
-endif()
