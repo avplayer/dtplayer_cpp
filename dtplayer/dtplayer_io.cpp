@@ -38,7 +38,7 @@ int dtplayer_context::pause_io_thread ()
 {
     this->io_loop.flag = IO_FLAG_PAUSE;
     while (this->io_loop.status != IO_LOOP_PAUSED)
-        usleep (1000);
+        usleep (100);
     this->io_loop.flag = IO_FLAG_NULL;
     dt_info(TAG,"IO THREAD PAUSE\n");
     return 0;
@@ -69,7 +69,7 @@ static void *player_io_thread (dtplayer_context_t * dtp_ctx)
     int ret = 0;
     do
     {
-        usleep (10000);
+        usleep (100);
         if (io_ctl->flag == IO_FLAG_PAUSE)
             io_ctl->status = IO_LOOP_PAUSED;
         if (io_ctl->status == IO_LOOP_QUIT)
@@ -83,7 +83,7 @@ static void *player_io_thread (dtplayer_context_t * dtp_ctx)
 				delete(frame);
 			}
             frame_valid = 0;
-            usleep (10000);
+            usleep (100);
             continue;
         }
         /*io ops */
@@ -103,7 +103,7 @@ static void *player_io_thread (dtplayer_context_t * dtp_ctx)
                 dtp_ctx->ctrl_info.eof_flag = 1;
             }
             delete(frame);
-            usleep (1000);
+            usleep (100);
             continue;
         }
         dt_debug (TAG, "read ok size:%d pts:%lld \n",frame->size,frame->pts);

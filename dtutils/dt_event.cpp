@@ -311,7 +311,7 @@ static void *event_transport_loop (void *)
     {
         if (mgt->exit_flag)
             goto QUIT;
-        usleep (10000);
+        usleep (100);
         event = dt_get_event (server_hub);
         if (!event)
             continue;

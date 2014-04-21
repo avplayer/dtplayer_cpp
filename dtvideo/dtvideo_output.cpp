@@ -154,7 +154,7 @@ static void *video_output_loop (void *args)
             goto EXIT;
         if (vo->status == VO_STATUS_IDLE || vo->status == VO_STATUS_PAUSE)
         {
-            usleep (50 * 1000);
+            usleep (100);
             continue;
         }
         /*pre read picture and update sys time */
@@ -162,7 +162,7 @@ static void *video_output_loop (void *args)
         if (!picture_pre)
         {
             dt_debug (TAG, "[%s:%d]frame read failed ! \n", __FUNCTION__, __LINE__);
-            usleep (1000);
+            usleep (100);
             continue;
         }
         cur_time = (int64_t) dt_gettime ();

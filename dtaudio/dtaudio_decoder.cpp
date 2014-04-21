@@ -93,7 +93,7 @@ static void *audio_decode_loop (void *arg)
         if (decoder->status == ADEC_STATUS_IDLE)
         {
             dt_info (TAG, "[%s:%d] Idle status ,please wait \n", __FUNCTION__, __LINE__);
-            usleep (1000);
+            usleep (100);
             continue;
         }
         if (decoder->status == ADEC_STATUS_EXIT)
@@ -109,14 +109,14 @@ static void *audio_decode_loop (void *arg)
         /*read frame */
         if (!decoder->parent)
         {
-            usleep (100000);
+            usleep (100);
             dt_info (TAG, "[%s:%d] decoder parent is NULL \n", __FUNCTION__, __LINE__);
             continue;
         }
         ret = decoder->parent->audio_read_frame(&frame);
         if (ret < 0 || frame.size <= 0)
         {
-            usleep (1000 * 10);
+            usleep (100);
             dt_debug (TAG, "[%s:%d] dtaudio decoder loop read frame failed \n", __FUNCTION__, __LINE__);
             continue;
         }
@@ -231,7 +231,7 @@ static void *audio_decode_loop (void *arg)
         if (out->buf_space () < pinfo->outlen)
         {
             dt_debug (TAG, "[%s:%d] output buffer do not left enough space ,space=%d level:%d outsie:%d \n", __FUNCTION__, __LINE__, out->buf_space (), out->buf_level (), pinfo->outlen);
-            usleep (1000 * 10);
+            usleep (1000);
             goto REFILL_BUFFER;
         }
         ret = out->buf_put (pinfo->outptr + fill_size, pinfo->outlen);
