@@ -12,6 +12,11 @@
 		register_vdec(vdec_##x##_ops); 	\
 	}
 
+//pts calc mode, 
+//0: calc with pts read from demuxer 
+//1: calc with duration
+static int pts_mode = 0; //pts calc mode, 0: calc with pts 1: calc with duration
+
 static std::vector<vd_wrapper_t> g_vd;
 
 static void register_vdec (vd_wrapper_t &vdec)
@@ -141,7 +146,17 @@ static void *video_decode_loop (void *arg)
             //use first decoded pts to estimate pts
             dt_info (TAG, "[%s:%d]first frame: pts:%llu dts:%llu duration:%d size:%d\n", __FUNCTION__, __LINE__, frame.pts, frame.dts, frame.duration, frame.size);
             decoder->pts_first = pts_exchange (decoder, picture->pts);
-
+            decoder->pts_current = decoder->pts_first;
+        }
+        else
+        {
+            if(pts_mode)
+            {
+                int fps = decoder->para.fps;
+                float dur_inc = 90000/fps;
+                picture->pts = decoder->pts_current + dur_inc;
+                decoder->pts_current = picture->pts; 
+            }
         }
         decoder->frame_count++;
         //Got one frame
@@ -179,6 +194,14 @@ int dtvideo_decoder::video_decoder_init ()
     ret = wrapper->init (wrapper,this);
     if (ret < 0)
         return -1;
+    
+    pts_mode = 0;    
+    char value[512];
+    if(GetEnv("VIDEO","pts.mode",value) > 0)
+    {
+        pts_mode = atoi(value);
+        dt_info(TAG,"pts mode:%d fps:%f \n",pts_mode,para.fps);
+    }
 
     dt_info (TAG, "[%s:%d] video decoder init ok\n", __FUNCTION__, __LINE__);
     video_decoder_thread = std::thread(video_decode_loop,this);

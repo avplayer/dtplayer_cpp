@@ -17,8 +17,6 @@ typedef enum
     VDEC_STATUS_EXIT
 } vdec_status_t;
 
-typedef struct dtvideo_decoder dtvideo_decoder_t;
-
 typedef struct vd_wrapper
 {
 
@@ -43,7 +41,7 @@ typedef struct vd_wrapper
 
 struct dtvideo_context;
 
-struct dtvideo_decoder
+typedef struct dtvideo_decoder
 {
     dtvideo_para_t para;
     vd_wrapper_t *wrapper;
@@ -66,7 +64,7 @@ struct dtvideo_decoder
 	int video_decoder_init ();
 	int video_decoder_stop ();
 	int video_decoder_start ();
-};
+}dtvideo_decoder_t;
 
 void vdec_register_all();
 void dtpicture_free (void *pic);
