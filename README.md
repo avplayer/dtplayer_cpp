@@ -36,6 +36,12 @@ Todo
 
 Trello:https://trello.com/b/e7qJjBUu/dtplayer
 
+Demo Repo
+========
+
+node-dtplayer: https://github.com/peterfuture/node-dtplayer
+DTTV:https://github.com/peterfuture/DTTV
+
 Help
 ========
 
