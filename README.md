@@ -39,9 +39,9 @@ Trello:https://trello.com/b/e7qJjBUu/dtplayer
 Demo Repo
 ========
 
-node-dtplayer: https://github.com/peterfuture/node-dtplayer
+dttv-android: https://github.com/peterfuture/dttv-android
 
-DTTV:https://github.com/peterfuture/DTTV
+dttv-desktop: https://github.com/peterfuture/dttv-desktop
 
 Help
 ========
